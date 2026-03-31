@@ -37,9 +37,6 @@ Runs on Stellar Testnet (no real money involved)
 ---
 
 ## Demo Video
-
-[https://youtube.com/YOUR_VIDEO_LINK](https://youtube.com/YOUR_VIDEO_LINK)
-
 Covers:
 
 * Wallet creation
@@ -138,8 +135,6 @@ Receiver Gets:    ₹499.90
 
 We onboarded 5 real users on Stellar Testnet and collected feedback through a structured form.
 
-### Google Form
-https://forms.gle/YOUR_FORM_LINK  
 
 ### Feedback Sheet
 docs/user-feedback.xlsx  
