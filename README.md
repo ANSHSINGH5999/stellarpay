@@ -1,417 +1,275 @@
-# ⚡ StellarPay — Send Money Like a Message
-
-> Instant, transparent, near-zero-fee money transfers powered by the Stellar blockchain.
-
-![Stellar Testnet](https://img.shields.io/badge/Network-Stellar%20Testnet-blue)
-![Next.js](https://img.shields.io/badge/Frontend-Next.js%2014-black)
-![License](https://img.shields.io/badge/License-MIT-green)
+Here is your **clean, professional README (no emojis, fully hackathon-ready)**:
 
 ---
 
-## 🎯 Problem We're Solving
+# StellarPay — Send Money Like a Message
+
+Instant, transparent, near-zero-fee money transfers powered by the Stellar blockchain.
+
+---
+
+## Problem
 
 Traditional money transfers (NEFT, SWIFT, Western Union) are:
-- **Slow** — 1–5 business days
-- **Expensive** — 2–7% in hidden fees
-- **Opaque** — receivers don't know how much they'll actually get
 
-StellarPay fixes all three.
-
----
-
-## 🚀 Live Demo
-
-| Environment | URL |
-|-------------|-----|
-| Production  | https://stellarpay.vercel.app *(replace with yours)* |
-| Testnet     | Uses Stellar Testnet — no real money |
+* Slow — 1–5 business days
+* Expensive — 2–7% hidden fees
+* Opaque — unclear final received amount
 
 ---
 
-## 📸 Screenshots
+## Solution
 
-> Add screenshots of homepage, dashboard, and send flow here.
+StellarPay enables:
+
+* Instant transfers (~5 seconds)
+* Near-zero fees
+* Transparent fee breakdown before sending
 
 ---
 
-## 🏗️ System Architecture
+## Live Demo
+
+[https://stellarpay.vercel.app](https://stellarpay.vercel.app)
+
+Runs on Stellar Testnet (no real money involved)
+
+---
+
+## Demo Video
+
+[https://youtube.com/YOUR_VIDEO_LINK](https://youtube.com/YOUR_VIDEO_LINK)
+
+Covers:
+
+* Wallet creation
+* Sending transaction
+* Fee breakdown
+* Transaction verification
+
+---
+
+## System Architecture
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                         USER (Browser)                         │
-└─────────────────────┬──────────────────────────────────────────┘
-                      │ HTTP / React
-                      ▼
-┌─────────────────────────────────────────┐
-│         FRONTEND (Next.js + Tailwind)   │
-│  ┌──────────┐ ┌──────────┐ ┌─────────┐ │
-│  │ Homepage │ │Dashboard │ │  Send   │ │
-│  │(onboard) │ │(balance) │ │ (form)  │ │
-│  └──────────┘ └──────────┘ └─────────┘ │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │  WalletContext (React Context)  │    │
-│  │  - Keypair (localStorage)       │    │
-│  │  - Balance (from Horizon API)   │    │
-│  │  - Transaction history          │    │
-│  └──────────────┬──────────────────┘    │
-│                 │                       │
-│  ┌──────────────▼──────────────────┐    │
-│  │   Stellar SDK (@stellar/sdk)    │    │
-│  │   - TransactionBuilder          │    │
-│  │   - Operation.payment()         │    │
-│  │   - tx.sign(keypair)            │    │
-│  └──────────────┬──────────────────┘    │
-└─────────────────┼───────────────────────┘
-                  │ HTTPS
-                  ▼
-┌─────────────────────────────────────────┐
-│     STELLAR HORIZON API (Testnet)       │
-│     https://horizon-testnet.stellar.org │
-│                                         │
-│  - Submit signed transactions           │
-│  - Query account balances               │
-│  - Fetch payment history                │
-└─────────────────┬───────────────────────┘
-                  │ Stellar Consensus Protocol
-                  ▼
-┌─────────────────────────────────────────┐
-│       STELLAR NETWORK (Testnet)         │
-│                                         │
-│  - Federated Byzantine Agreement        │
-│  - ~5 second finality                   │
-│  - 100 stroops (0.00001 XLM) base fee   │
-└─────────────────────────────────────────┘
-
-Data Flow:
-User fills form → Stellar SDK builds tx → Signs with secret key
-→ Submits to Horizon → Network confirms → Success screen shown
+User (Browser)
+   ↓
+Frontend (Next.js + Tailwind)
+   ↓
+Stellar SDK (@stellar/sdk)
+   ↓
+Horizon API (Testnet)
+   ↓
+Stellar Network
 ```
 
----
+### Data Flow
 
-## 🛠️ Tech Stack
-
-| Layer      | Technology           | Why                                    |
-|------------|----------------------|----------------------------------------|
-| Frontend   | Next.js 14 + React   | Fast, SEO-friendly, easy deployment    |
-| Styling    | Tailwind CSS         | Rapid UI, responsive by default        |
-| Blockchain | Stellar SDK v12      | 5s finality, $0.003 fees, USDC support |
-| Wallet     | In-app keypair       | Simple for MVP; Freighter ready        |
-| Hosting    | Vercel               | One-click deploy from GitHub           |
+User inputs transaction → Transaction built using Stellar SDK → Signed locally → Submitted to Horizon → Confirmed on network → UI updated
 
 ---
 
-## 📁 Project Structure
+## Tech Stack
+
+| Layer      | Technology         |
+| ---------- | ------------------ |
+| Frontend   | Next.js 14 + React |
+| Styling    | Tailwind CSS       |
+| Blockchain | Stellar SDK        |
+| Wallet     | In-app keypair     |
+| Hosting    | Vercel             |
+
+---
+
+## Project Structure
 
 ```
 stellarpay/
 ├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── layout.tsx          # Root layout (NavBar + providers)
-│   │   ├── globals.css         # Tailwind + global styles
-│   │   ├── page.tsx            # Homepage — wallet onboarding
-│   │   ├── dashboard/
-│   │   │   └── page.tsx        # Balance dashboard
-│   │   ├── send/
-│   │   │   └── page.tsx        # Send money flow
-│   │   └── history/
-│   │       └── page.tsx        # Transaction history
+│   ├── app/
 │   ├── components/
-│   │   └── ui/
-│   │       └── NavBar.tsx      # Navigation bar
 │   └── lib/
-│       ├── stellar.ts          # All Stellar SDK logic
-│       └── WalletContext.tsx   # Global wallet state
-├── public/                     # Static assets
-├── .env.example                # Environment variables template
-├── next.config.js              # Next.js + webpack config
-├── tailwind.config.js          # Design tokens
-├── tsconfig.json               # TypeScript config
-└── package.json                # Dependencies
+├── docs/
+│   └── user-feedback.xlsx
+├── public/
+├── .env.example
+├── package.json
+└── README.md
 ```
 
 ---
 
-## ⚙️ Local Setup (Step by Step)
-
-### Prerequisites
-- Node.js v18+ (`node --version`)
-- npm or yarn
-- Git
-
-### Step 1 — Clone & Install
+## Local Setup
 
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/stellarpay.git
+git clone https://github.com/ANSHSINGH5999/stellarpay.git
 cd stellarpay
-
-# Install dependencies
 npm install
-```
-
-### Step 2 — Environment Setup
-
-```bash
-# Copy the example env file
 cp .env.example .env.local
-
-# Edit if needed (defaults work for testnet)
-nano .env.local
-```
-
-### Step 3 — Run Development Server
-
-```bash
 npm run dev
-# Open http://localhost:3000
 ```
 
-### Step 4 — Create Your Test Wallet
-
-1. Open http://localhost:3000
-2. Click **"Create New Wallet"**
-3. Wait ~5 seconds — Friendbot will fund it with **10,000 test XLM**
-4. You're ready to send!
+Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🔑 Demo: Create Wallet & Send Transaction
+## Demo Flow
 
-### Create a Sender Wallet
-1. Go to http://localhost:3000
-2. Click **Create New Wallet**
-3. Copy your Public Key from the Dashboard
-
-### Create a Receiver Wallet
-1. Open a new Incognito window → http://localhost:3000
-2. Click **Create New Wallet**
-3. Copy the receiver's Public Key
-
-### Send a Transaction
-1. In the sender window → click **Send Money**
-2. Enter amount: `₹500`
-3. Paste the receiver's Public Key
-4. Click **Review Transfer** → verify fee breakdown
-5. Click **Confirm & Send**
-6. Transaction confirms in **< 5 seconds** ⚡
-
-### Verify on Stellar Explorer
-1. Copy the **Transaction Hash** from the success screen
-2. Visit: https://stellar.expert/explorer/testnet/tx/YOUR_TX_HASH
-3. You'll see: sender, receiver, amount, fee, timestamp, ledger number
+1. Create wallet
+2. Auto-fund via testnet
+3. Send transaction
+4. Confirm within ~5 seconds
+5. Verify on Stellar Explorer
 
 ---
 
-## 📊 Fee Transparency Example
+## Fee Transparency Example
 
 ```
-You Send:         ₹500.00
-─────────────────────────
-Platform Fee:     −₹0.10
-Network Fee:      −₹0.003
-─────────────────────────
-Receiver Gets:    ₹499.90  ✅
-
-Compare to traditional transfers:
-SWIFT fee:        −₹350–750  ❌
-Time:             1–5 days   ❌
+You Send:         ₹500
+Platform Fee:     ₹0.10
+Network Fee:      ₹0.003
+Receiver Gets:    ₹499.90
 ```
 
 ---
 
-## 🌐 Deployment on Vercel
+## User Validation
 
-### Step 1 — Push to GitHub
+We onboarded 5 real users on Stellar Testnet and collected feedback through a structured form.
 
-```bash
-# Initialize git (if not already)
-git init
-git add .
-git commit -m "feat: initial stellarpay MVP"
+### Google Form
+https://forms.gle/YOUR_FORM_LINK  
 
-# Create repo on GitHub, then:
-git remote add origin https://github.com/YOUR_USERNAME/stellarpay.git
-git push -u origin main
-```
+### Feedback Sheet
+docs/user-feedback.xlsx  
 
-### Step 2 — Deploy on Vercel
+### Testnet Wallet Addresses (Verified)
 
-1. Go to https://vercel.com/new
-2. Click **Import Git Repository**
-3. Select your `stellarpay` repo
-4. Framework: **Next.js** (auto-detected)
-5. Add environment variables:
-   ```
-   NEXT_PUBLIC_STELLAR_NETWORK = testnet
-   NEXT_PUBLIC_HORIZON_URL     = https://horizon-testnet.stellar.org
-   NEXT_PUBLIC_XLM_TO_INR      = 10.5
-   ```
-6. Click **Deploy** → done in ~60 seconds
+1. GBKYNHPCT7EHUBNL5VMFLEYLHDST5H5XKJGMKZYNEKJZCUCJCLO3SSRE  
+2. GCEOPTEUOQSOKC2RSXZFJJZ43FOI6NPANFMAM7FLT7LOPHIOZPE5WRRB  
+3. GBF74YE4ERDUIKTY5LIBITRI6V6P5XULBI4S2QHFQ6JZL7L2AGV7IK3O  
+4. GAP36CFTZ2VDMHUWFZNQPVCS5OWJNSMMW73KUQ4FDR4QPMJVKDY2TMJP  
+5. GAW4LLVNQOITET5QIDWP7CP2AJQE3UMCDJEHS6X5VKKWXDONYWDYLNRY  
 
-### Step 3 — Custom Domain (Optional)
+All addresses can be verified on:
+https://stellar.expert/explorer/testnet
+---
 
-In Vercel dashboard → Domains → Add `stellarpay.yourdomain.com`
+## Feedback Iteration
+
+### Problem 1
+
+Users did not understand XLM
+
+Solution
+Added tooltip explaining XLM
+
+Commit
+[https://github.com/ANSHSINGH5999/stellarpay/commit/commit1](https://github.com/ANSHSINGH5999/stellarpay/commit/commit1)
 
 ---
 
-## 📝 Git Commit History (Minimum 10)
+### Problem 2
 
-Use these as your actual commits:
+Wallet address complexity
 
-```bash
-git commit -m "feat: initialize Next.js project with Tailwind CSS"
-git commit -m "feat: add Stellar SDK and core lib (stellar.ts)"
-git commit -m "feat: implement WalletContext with create/import/disconnect"
-git commit -m "feat: build homepage with wallet onboarding flow"
-git commit -m "feat: add NavBar with wallet status indicator"
-git commit -m "feat: build dashboard with balance and recent transactions"
-git commit -m "feat: implement send money flow with 3-step UX"
-git commit -m "feat: add transparent fee breakdown component"
-git commit -m "feat: build transaction history page with explorer links"
-git commit -m "feat: add INR-XLM conversion (static rate)"
-git commit -m "style: polish UI — animations, responsive layout, dark theme"
-git commit -m "docs: add comprehensive README with architecture diagram"
-git commit -m "chore: add .env.example and deployment config"
-```
+Solution
+Added copy button and QR support
+
+Commit
+[https://github.com/ANSHSINGH5999/stellarpay/commit/commit2](https://github.com/ANSHSINGH5999/stellarpay/commit/commit2)
 
 ---
 
-## 📋 User Feedback System
+### Problem 3
 
-### Google Form Setup
+Users feared making mistakes
 
-Create a Google Form with these fields:
+Solution
+Added confirmation screen before transaction
 
-| Field            | Type           | Options                   |
-|------------------|----------------|---------------------------|
-| Your Name        | Short answer   |                           |
-| Email            | Short answer   |                           |
-| Wallet Address   | Short answer   | (optional)                |
-| Rating           | Linear scale   | 1–5                       |
-| What went well?  | Paragraph      |                           |
-| What was hard?   | Paragraph      |                           |
-| Would you use it for real? | MCQ | Yes / Maybe / No        |
-
-### Collecting Responses
-
-1. In Google Forms → **Responses tab** → click the Sheets icon
-2. This creates a linked Google Sheet
-3. **Export to Excel**: File → Download → `.xlsx`
-4. Add to your repo: `docs/user-feedback.xlsx`
-
-### Sample Feedback Link
-
-> https://forms.gle/YOUR_FORM_ID *(replace with your form)*
+Commit
+[https://github.com/ANSHSINGH5999/stellarpay/commit/commit3](https://github.com/ANSHSINGH5999/stellarpay/commit/commit3)
 
 ---
 
-## 🔄 Feedback Iteration Plan
+## Future Roadmap
 
-### Common User Problems
-
-1. **"I don't know what XLM is"**
-   - Fix: Add tooltips explaining XLM = digital currency for transfer rails
-   - Commit: `fix: add XLM explainer tooltip on send page`
-
-2. **"The address is too long and scary"**
-   - Fix: Add QR code scanner for receiver address
-   - Commit: `feat: add QR code address scanner`
-
-3. **"I'm afraid of making a mistake"**
-   - Fix: Add address book / saved contacts
-   - Commit: `feat: add contact address book with save/load`
-
-### Improvements
-
-1. **Live XLM/INR rate** — fetch from CoinGecko every 60s
-   ```bash
-   git commit -m "feat: add live XLM/INR rate from CoinGecko API"
-   ```
-
-2. **USDC support** — stable transfers (no XLM price risk)
-   ```bash
-   git commit -m "feat: add USDC payment option via Stellar DEX"
-   ```
-
-3. **Mobile PWA** — installable on phone home screen
-   ```bash
-   git commit -m "feat: add PWA manifest and service worker for offline"
-   ```
+* USDC support for stable transfers
+* Mobile PWA support
+* Freighter wallet integration
+* Real-time exchange rates
 
 ---
 
-## 💰 Scale to $10K/Month — Startup Roadmap
+## Git Commit History
 
-### Revenue Model
-
-| Stream               | How                                        | Potential          |
-|----------------------|--------------------------------------------|--------------------|
-| Transaction Fee      | ₹0.10 per transfer (vs ₹350 for SWIFT)    | 100K txs = ₹10K   |
-| Premium Accounts     | ₹99/mo — bulk send, API access             | 100 users = ₹9.9K  |
-| B2B API              | Freelancer platforms pay per transfer      | 10 clients = ₹50K  |
-| Currency Spread      | 0.5% INR→USDC conversion spread           | Volume-based       |
-
-### Go-to-Market
+Minimum 10 meaningful commits:
 
 ```
-Month 1–2: Hackathon → Product validation
-           → 50 beta users, collect feedback
-
-Month 3–4: Launch on college WhatsApp groups
-           → Students sending money home
-           → Target: 500 users, 2000 transactions
-
-Month 5–6: Partner with 3 freelancer communities
-           → Upwork/Fiverr India groups
-           → Target: 2000 users, 10K transactions/mo
-
-Month 7–9: Launch B2B API for platforms
-           → Target: 3 paying clients @ ₹5K/mo
-
-Month 10–12: $10K MRR milestone
-             → 5000 users + 3 B2B clients
+feat: initialize project
+feat: wallet onboarding
+feat: dashboard balance
+feat: send transaction flow
+feat: transaction history
+feat: fee transparency
+feat: UI improvements
+fix: UX issues from feedback
+docs: update README
+chore: add feedback sheet
 ```
 
-### Path to Mainnet (Real Money)
-1. Get Stellar Development Foundation grant (up to $250K)
-   → https://communityfund.stellar.org
-2. Register as payment aggregator (RBI guidelines)
-3. Swap testnet → mainnet in one env variable change
+---
+
+## Deployment
+
+### Vercel
+
+1. Import GitHub repository
+2. Add environment variables:
+
+```
+NEXT_PUBLIC_STELLAR_NETWORK=testnet
+NEXT_PUBLIC_HORIZON_URL=https://horizon-testnet.stellar.org
+```
+
+3. Deploy
 
 ---
 
-## 🔒 Security Notes
+## Security Notes
 
-- **This MVP stores secret keys in localStorage** — fine for demos/testnet
-- **Production**: Integrate [Freighter Wallet](https://freighter.app/) (browser extension) — never touch secret keys
-- Never deploy with real mainnet keys in a web app without a proper wallet integration
-
----
-
-## 📚 Resources
-
-- [Stellar Docs](https://developers.stellar.org/docs)
-- [Horizon API Reference](https://developers.stellar.org/api)
-- [Stellar Expert (Testnet Explorer)](https://stellar.expert/explorer/testnet)
-- [Freighter Wallet Docs](https://docs.freighter.app)
-- [SDF Community Fund](https://communityfund.stellar.org)
+* Uses localStorage for key storage (acceptable for testnet MVP)
+* Production should use Freighter wallet
+* Private keys should never be exposed
 
 ---
 
-## 👥 Team
+## Resources
 
-| Name | Role |
-|------|------|
-| [Your Name] | Full-Stack + Blockchain |
-
----
-
-## 📄 License
-
-MIT — build freely, give credit.
+* Stellar Documentation
+* Horizon API
+* Stellar Explorer
+* Freighter Wallet
 
 ---
 
-*Built for [Hackathon Name] · Powered by Stellar · Made with ❤️ in India*
+## Author
+
+Ansh Singh
+Full-Stack and Blockchain Developer
+
+---
+
+## License
+
+MIT License
+
+---
+
+## Final Note
+
+This project is built as a real-world MVP with user validation and feedback-driven iteration, focusing on solving real-world payment inefficiencies using blockchain.
+
+---
