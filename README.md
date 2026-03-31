@@ -30,7 +30,7 @@ StellarPay enables:
 
 ## Live Demo
 
-[https://stellarpay.vercel.app](https://stellarpay.vercel.app)
+[https://stellarpay.vercel.app](https://vercel.com/anshsingh5999s-projects/stellarpay-bxs8)
 
 Runs on Stellar Testnet (no real money involved)
 
