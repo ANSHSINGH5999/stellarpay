@@ -198,22 +198,24 @@ export async function getRecentTransactions(
 
 // ── 6. INR ↔ XLM conversion (static rate for MVP) ────────────────────────────
 // In production, fetch this from CoinGecko or Stellar DEX
-const XLM_TO_INR = 10.5;  // approximate rate — update as needed
+export const STATIC_XLM_TO_INR = 10.5;  // fallback rate — update as needed
 
-export function inrToXlm(inr: number): number {
-  return inr / XLM_TO_INR;
+export function inrToXlm(inr: number, rate = STATIC_XLM_TO_INR): number {
+  return inr / rate;
 }
 
-export function xlmToInr(xlm: number): number {
-  return xlm * XLM_TO_INR;
+export function xlmToInr(xlm: number, rate = STATIC_XLM_TO_INR): number {
+  return xlm * rate;
 }
 
 // ── 7. Fee breakdown helper ───────────────────────────────────────────────────
-export function getFeeBreakdown(amountInr: number) {
+// Accepts an optional live XLM/INR rate (from useStellarPrice hook).
+// Falls back to STATIC_XLM_TO_INR if not provided.
+export function getFeeBreakdown(amountInr: number, xlmRate = STATIC_XLM_TO_INR) {
   const feeInr     = 0.10;          // flat fee in INR (you keep this)
   const networkFee = 0.003;         // Stellar fee ≈ ₹0.003
   const receiveAmt = amountInr - feeInr;
-  const xlmAmount  = inrToXlm(receiveAmt);
+  const xlmAmount  = inrToXlm(receiveAmt, xlmRate);
 
   return {
     youSend:       amountInr.toFixed(2),
@@ -221,6 +223,7 @@ export function getFeeBreakdown(amountInr: number) {
     networkFee:    networkFee.toFixed(3),
     receiverGets:  receiveAmt.toFixed(2),
     xlmAmount:     xlmAmount.toFixed(4),
+    rate:          xlmRate,
   };
 }
 
