@@ -16,15 +16,16 @@ import Link from 'next/link';
 import { useWallet } from '@/lib/WalletContext';
 import {
   Send, RefreshCw, Copy, ExternalLink,
-  ArrowUpRight, ArrowDownLeft, Wallet, Clock
+  ArrowUpRight, ArrowDownLeft, Wallet, Clock, QrCode
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { xlmToInr } from '@/lib/stellar';
+import { useStellarPrice } from '@/hooks/useStellarPrice';
 import clsx from 'clsx';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { publicKey, balance, transactions, isLoading, refreshBalance } = useWallet();
+  const { xlmToInr: liveXlmToInr, rate, lastUpdated } = useStellarPrice();
 
   // Redirect to home if no wallet
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function DashboardPage() {
 
   if (!publicKey) return null;
 
-  const balanceInr = xlmToInr(parseFloat(balance)).toFixed(2);
+  const balanceInr = liveXlmToInr(parseFloat(balance)).toFixed(2);
 
   const copyAddress = () => {
     navigator.clipboard.writeText(publicKey);
@@ -93,6 +94,10 @@ export default function DashboardPage() {
             <div className="text-xs text-slate-500 font-mono">
               {publicKey.slice(0, 8)}…{publicKey.slice(-8)}
             </div>
+            <div className="text-xs text-slate-600 mt-1">
+              1 XLM ≈ ₹{rate.toFixed(2)}
+              {lastUpdated && <span className="ml-1 text-emerald-600 font-medium">● live</span>}
+            </div>
           </div>
         </div>
 
@@ -114,7 +119,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Quick actions ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Link
           href="/send"
           className="card flex flex-col items-center gap-3 py-6 hover:border-brand-500
@@ -124,8 +129,21 @@ export default function DashboardPage() {
                           group-hover:bg-brand-500/30 transition-colors">
             <Send className="w-6 h-6 text-brand-400" />
           </div>
-          <span className="font-semibold text-white">Send Money</span>
-          <span className="text-xs text-slate-500">Transfer XLM instantly</span>
+          <span className="font-semibold text-white text-sm">Send</span>
+          <span className="text-xs text-slate-500">Transfer XLM</span>
+        </Link>
+
+        <Link
+          href="/receive"
+          className="card flex flex-col items-center gap-3 py-6 hover:border-emerald-500
+                     transition-colors cursor-pointer group"
+        >
+          <div className="w-12 h-12 rounded-xl bg-emerald-900/30 flex items-center justify-center
+                          group-hover:bg-emerald-900/50 transition-colors">
+            <QrCode className="w-6 h-6 text-emerald-400" />
+          </div>
+          <span className="font-semibold text-white text-sm">Receive</span>
+          <span className="text-xs text-slate-500">Share address</span>
         </Link>
 
         <Link
@@ -137,8 +155,8 @@ export default function DashboardPage() {
                           group-hover:bg-slate-700 transition-colors">
             <Clock className="w-6 h-6 text-slate-400" />
           </div>
-          <span className="font-semibold text-white">History</span>
-          <span className="text-xs text-slate-500">View all transactions</span>
+          <span className="font-semibold text-white text-sm">History</span>
+          <span className="text-xs text-slate-500">View all txns</span>
         </Link>
       </div>
 
