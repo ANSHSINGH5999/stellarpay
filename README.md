@@ -206,7 +206,9 @@ Verifiable at: https://stellar.expert/explorer/testnet
 
 Form fields: Name, Email, Stellar Wallet Address, Rating (1-5), What did you like, What was confusing, Would you pay real money to use this
 
-**Data export:** [docs/user-feedback.md](./docs/user-feedback.md)
+**Data export (Excel):** [docs/user-feedback-responses.xlsx](./docs/user-feedback-responses.xlsx)
+
+**Full feedback doc:** [docs/user-feedback.md](./docs/user-feedback.md)
 
 ### Feedback Summary
 
