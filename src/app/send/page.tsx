@@ -13,7 +13,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@/lib/WalletContext';
-import { sendPayment, getFeeBreakdown, inrToXlm } from '@/lib/stellar';
+import { sendPayment, getFeeBreakdown } from '@/lib/stellar';
+import { useStellarPrice } from '@/hooks/useStellarPrice';
 import {
   Send, ArrowRight, CheckCircle2, ExternalLink,
   AlertTriangle, Info, Zap, Clock, Shield
@@ -33,6 +34,7 @@ interface TxResult {
 export default function SendPage() {
   const router     = useRouter();
   const { publicKey, secretKey, balance, refreshBalance } = useWallet();
+  const { rate: xlmRate } = useStellarPrice();
 
   // Form state
   const [amountInr,  setAmountInr]  = useState('');
@@ -49,12 +51,12 @@ export default function SendPage() {
 
   if (!publicKey || !secretKey) return null;
 
-  // ── Fee breakdown (computed whenever amount changes) ──────────────────────
+  // ── Fee breakdown (computed whenever amount or live rate changes) ─────────
   const feeBreakdown = useMemo(() => {
     const amount = parseFloat(amountInr);
     if (!amountInr || isNaN(amount) || amount <= 0) return null;
-    return getFeeBreakdown(amount);
-  }, [amountInr]);
+    return getFeeBreakdown(amount, xlmRate);
+  }, [amountInr, xlmRate]);
 
   // ── Validation ─────────────────────────────────────────────────────────────
   const isValidAddress = (addr: string) => addr.startsWith('G') && addr.length === 56;
@@ -327,6 +329,10 @@ export default function SendPage() {
                 <div className="flex justify-between text-xs text-slate-500">
                   <span>XLM to send</span>
                   <span className="font-mono">{feeBreakdown.xlmAmount} XLM</span>
+                </div>
+                <div className="flex justify-between text-xs text-slate-600 pt-1 border-t border-surface-muted">
+                  <span>Rate used</span>
+                  <span>1 XLM = ₹{xlmRate.toFixed(2)} (live)</span>
                 </div>
               </div>
             </div>
