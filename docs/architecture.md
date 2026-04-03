@@ -174,11 +174,53 @@ Live (production with useStellarPrice hook):
 | `src/lib/stellar.ts` | All Stellar SDK calls — one source of truth |
 | `src/lib/WalletContext.tsx` | Global wallet state — shares data across all pages |
 | `src/app/page.tsx` | Onboarding — create or import wallet |
-| `src/app/dashboard/page.tsx` | Balance overview + recent transactions |
-| `src/app/send/page.tsx` | The core UX — 3-step send flow |
+| `src/app/dashboard/page.tsx` | Balance overview + recent transactions + live rate |
+| `src/app/send/page.tsx` | The core UX — 3-step send flow with live rate |
+| `src/app/receive/page.tsx` | Receive page — share address, copy/share button |
 | `src/app/history/page.tsx` | Full transaction history with filtering |
-| `src/components/ui/NavBar.tsx` | Navigation + wallet status indicator |
+| `src/components/ui/NavBar.tsx` | Responsive navigation (desktop + mobile hamburger) |
 | `src/components/transaction/FeeCard.tsx` | Transparent fee breakdown display |
 | `src/components/wallet/WalletCard.tsx` | Compact wallet info display |
-| `src/hooks/useStellarPrice.ts` | Live XLM/INR rate from CoinGecko |
+| `src/hooks/useStellarPrice.ts` | Live XLM/INR rate from CoinGecko (used in dashboard, send, receive) |
 | `src/types/index.ts` | TypeScript types — single source of truth |
+
+---
+
+## v1.1 Changes (Post User Feedback)
+
+### New: `/receive` page flow
+
+```
+User clicks "Receive" in nav or dashboard
+     │
+     ▼
+ReceivePage renders:
+  - publicKey displayed in chunked format (8 chars per group)
+  - "Copy Address" button → navigator.clipboard.writeText(publicKey)
+  - "Share" button → navigator.share() (Web Share API, mobile)
+  - Instructions: 4 steps for how to receive XLM
+  - Live rate: useStellarPrice() hook
+     │
+     ▼
+Sender enters the address in /send page
+  - Validates: starts with 'G', exactly 56 chars
+  - Not equal to sender's own address
+     │
+     ▼
+Transaction flows normally via sendPayment()
+```
+
+### Updated: Live XLM/INR Rate
+
+```
+useStellarPrice() hook:
+  1. On mount: fetch CoinGecko /simple/price?ids=stellar&vs_currencies=inr
+  2. Returns { rate, xlmToInr(), inrToXlm(), lastUpdated }
+  3. Sets interval: refetch every 60 seconds
+  4. On error: falls back to STATIC_XLM_TO_INR (10.5)
+
+Used in:
+  - dashboard/page.tsx → balanceInr display
+  - send/page.tsx → feeBreakdown.xlmAmount calculation
+  - receive/page.tsx → rate display
+```
