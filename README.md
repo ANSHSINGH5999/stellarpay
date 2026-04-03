@@ -31,8 +31,7 @@ Traditional money transfers (NEFT, SWIFT, Western Union) are:
 | Testnet Network | Stellar Testnet — no real money involved |
 | Stellar Explorer | https://stellar.expert/explorer/testnet |
 
-**Demo Video:** [Watch full MVP walkthrough](https://youtu.be/YOUR_VIDEO_ID)
-*(Record a Loom/YouTube video showing wallet creation, send, receive flow — then update this link)*
+
 
 ---
 
