@@ -66,20 +66,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     createdAt:    null,
   });
 
-  // ── Load from localStorage on mount ───────────────────────────────────────
-  useEffect(() => {
-    const stored = localStorage.getItem('stellarpay_wallet');
-    if (stored) {
-      try {
-        const { publicKey, secretKey, createdAt } = JSON.parse(stored);
-        setState(s => ({ ...s, createdAt: createdAt ?? null }));
-        loadAccountData(publicKey, secretKey);
-      } catch {
-        localStorage.removeItem('stellarpay_wallet');
-      }
-    }
-  }, []);
-
   // ── Load balance + transactions ────────────────────────────────────────────
   const loadAccountData = useCallback(async (pub: string, sec: string) => {
     setState(s => ({ ...s, isLoading: true, error: null, publicKey: pub, secretKey: sec }));
@@ -103,6 +89,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       }));
     }
   }, []);
+
+  // ── Load from localStorage on mount ───────────────────────────────────────
+  useEffect(() => {
+    const stored = localStorage.getItem('stellarpay_wallet');
+    if (stored) {
+      try {
+        const { publicKey, secretKey, createdAt } = JSON.parse(stored);
+        setState(s => ({ ...s, createdAt: createdAt ?? null }));
+        loadAccountData(publicKey, secretKey);
+      } catch {
+        localStorage.removeItem('stellarpay_wallet');
+      }
+    }
+  }, [loadAccountData]);
 
   // ── Create new wallet ──────────────────────────────────────────────────────
   const createWallet = async () => {

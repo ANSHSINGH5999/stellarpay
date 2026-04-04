@@ -15,7 +15,7 @@ export default function NotFound() {
       <div>
         <h1 className="text-6xl font-black text-slate-700">404</h1>
         <p className="text-slate-400 mt-2 text-lg">Page not found on the Stellar network.</p>
-        <p className="text-slate-600 text-sm mt-1">The address you entered doesn't exist in this app.</p>
+        <p className="text-slate-600 text-sm mt-1">The address you entered doesn&apos;t exist in this app.</p>
       </div>
 
       <div className="flex flex-wrap justify-center gap-3">

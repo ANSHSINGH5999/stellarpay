@@ -51,14 +51,14 @@ export default function SendPage() {
     if (!publicKey) router.replace('/');
   }, [publicKey, router]);
 
-  if (!publicKey || !secretKey) return null;
-
-  // ── Fee breakdown (computed whenever amount or live rate changes) ─────────
+  // ── Fee breakdown — must be before any early return (Rules of Hooks) ──────
   const feeBreakdown = useMemo(() => {
     const amount = parseFloat(amountInr);
     if (!amountInr || isNaN(amount) || amount <= 0) return null;
     return getFeeBreakdown(amount, xlmRate);
   }, [amountInr, xlmRate]);
+
+  if (!publicKey || !secretKey) return null;
 
   // ── Validation ─────────────────────────────────────────────────────────────
   const isValidAddress = (addr: string) => addr.startsWith('G') && addr.length === 56;
@@ -284,7 +284,7 @@ export default function SendPage() {
           {/* Receiver address */}
           <div>
             <label className="text-sm font-medium text-slate-300 mb-2 flex items-center justify-between">
-              Receiver's Stellar Address
+              Receiver&apos;s Stellar Address
               <button
                 type="button"
                 onClick={async () => {
