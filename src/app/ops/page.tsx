@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -34,6 +34,7 @@ function statusClasses(status: 'healthy' | 'watching' | 'pending' | 'complete' |
 
 export default function OpsPage() {
   useEffect(() => { document.title = 'Ops Center — StellarPay'; }, []);
+  const [showAllUsers, setShowAllUsers] = useState(false);
 
   const totalTransactions = verifiedUsers.reduce((sum, user) => sum + user.txCount, 0);
   const averageRating =
@@ -150,12 +151,15 @@ export default function OpsPage() {
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="card">
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-brand-400" />
-            <h2 className="text-xl font-bold text-white">Verified user registry</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-brand-400" />
+              <h2 className="text-xl font-bold text-white">Verified user registry</h2>
+            </div>
+            <span className="badge-info">{verifiedUsers.length} users</span>
           </div>
           <div className="space-y-3">
-            {verifiedUsers.map(user => (
+            {(showAllUsers ? verifiedUsers : verifiedUsers.slice(0, 5)).map(user => (
               <div key={user.wallet} className="rounded-2xl border border-surface-muted p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -183,7 +187,13 @@ export default function OpsPage() {
               </div>
             ))}
           </div>
-          <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+          <button
+            onClick={() => setShowAllUsers(s => !s)}
+            className="mt-4 w-full text-sm text-brand-400 hover:text-brand-300 transition-colors py-2"
+          >
+            {showAllUsers ? '↑ Show fewer' : `↓ Show all ${verifiedUsers.length} users`}
+          </button>
+          <div className="mt-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
             30+ verified wallets on record. Black Belt user requirement satisfied.
           </div>
         </div>
