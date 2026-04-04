@@ -17,7 +17,7 @@ import { sendPayment, getFeeBreakdown } from '@/lib/stellar';
 import { useStellarPrice } from '@/hooks/useStellarPrice';
 import {
   Send, ArrowRight, CheckCircle2, ExternalLink,
-  AlertTriangle, Info, Zap, Clock, Shield
+  AlertTriangle, Info, Zap, Clock, Shield, Clipboard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -167,7 +167,15 @@ export default function SendPage() {
 
           {/* Transaction hash */}
           <div className="w-full bg-surface rounded-xl p-3">
-            <p className="text-xs text-slate-500 mb-1">Transaction Hash</p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-slate-500">Transaction Hash</p>
+              <button
+                onClick={() => { navigator.clipboard.writeText(txResult.hash); toast.success('Hash copied!'); }}
+                className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors"
+              >
+                <Clipboard className="w-3 h-3" /> Copy
+              </button>
+            </div>
             <p className="text-xs font-mono text-slate-300 break-all">{txResult.hash}</p>
           </div>
 
@@ -254,7 +262,7 @@ export default function SendPage() {
 
             {/* Quick amount buttons */}
             <div className="flex gap-2 mt-2">
-              {[100, 500, 1000, 2000].map(amt => (
+              {[100, 500, 1000, 2000, 5000].map(amt => (
                 <button
                   key={amt}
                   onClick={() => setAmountInr(String(amt))}
@@ -273,8 +281,18 @@ export default function SendPage() {
 
           {/* Receiver address */}
           <div>
-            <label className="text-sm font-medium text-slate-300 mb-2 block">
+            <label className="text-sm font-medium text-slate-300 mb-2 flex items-center justify-between">
               Receiver's Stellar Address
+              <button
+                type="button"
+                onClick={async () => {
+                  const text = await navigator.clipboard.readText();
+                  setReceiver(text.trim());
+                }}
+                className="flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 transition-colors"
+              >
+                <Clipboard className="w-3.5 h-3.5" /> Paste
+              </button>
             </label>
             <input
               type="text"
@@ -289,8 +307,16 @@ export default function SendPage() {
 
           {/* Optional memo */}
           <div>
-            <label className="text-sm font-medium text-slate-300 mb-2 flex items-center gap-1">
-              Memo <span className="text-slate-500 text-xs">(optional)</span>
+            <label className="text-sm font-medium text-slate-300 mb-2 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                Memo <span className="text-slate-500 text-xs">(optional)</span>
+              </span>
+              <span className={clsx(
+                'text-xs font-mono',
+                memo.length > 24 ? 'text-amber-400' : 'text-slate-600'
+              )}>
+                {28 - memo.length} chars left
+              </span>
             </label>
             <input
               type="text"
