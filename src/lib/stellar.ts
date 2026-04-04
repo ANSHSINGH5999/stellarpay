@@ -54,6 +54,15 @@ export interface RecentTx {
   createdAt:   string;
 }
 
+export interface SponsoredPaymentResult {
+  feeSource: string;
+  senderPublicKey: string;
+  receiverPublicKey: string;
+  sponsoredFeeXLM: string;
+  innerTransactionXdr: string;
+  feeBumpTransactionXdr: string;
+}
+
 // ── 1. Generate a brand-new keypair (wallet) ─────────────────────────────────
 export function generateKeypair(): { publicKey: string; secretKey: string } {
   const kp = Keypair.random();
@@ -145,6 +154,54 @@ export async function sendPayment(
     timeSeconds,
     ledger:      result.ledger,
     explorerUrl: `https://stellar.expert/explorer/testnet/tx/${result.hash}`,
+  };
+}
+
+// ── 4b. Build a fee-bump sponsored transaction (gasless UX foundation) ─────
+export async function buildSponsoredPayment(
+  senderSecret: string,
+  sponsorSecret: string,
+  receiverPublic: string,
+  amountXLM: string,
+  memo?: string
+): Promise<SponsoredPaymentResult> {
+  const senderKP = Keypair.fromSecret(senderSecret);
+  const sponsorKP = Keypair.fromSecret(sponsorSecret);
+  const senderAccount = await server.loadAccount(senderKP.publicKey());
+
+  const innerTxBuilder = new TransactionBuilder(senderAccount, {
+    fee: STELLAR_FEE_STROOPS,
+    networkPassphrase: Networks.TESTNET,
+  }).addOperation(
+    Operation.payment({
+      destination: receiverPublic,
+      asset: Asset.native(),
+      amount: amountXLM,
+    })
+  );
+
+  if (memo) {
+    innerTxBuilder.addMemo(Memo.text(memo.substring(0, 28)));
+  }
+
+  const innerTx = innerTxBuilder.setTimeout(30).build();
+  innerTx.sign(senderKP);
+
+  const feeBumpTx = TransactionBuilder.buildFeeBumpTransaction(
+    sponsorKP.publicKey(),
+    STELLAR_FEE_STROOPS,
+    innerTx,
+    Networks.TESTNET
+  );
+  feeBumpTx.sign(sponsorKP);
+
+  return {
+    feeSource: sponsorKP.publicKey(),
+    senderPublicKey: senderKP.publicKey(),
+    receiverPublicKey: receiverPublic,
+    sponsoredFeeXLM: '0.00001',
+    innerTransactionXdr: innerTx.toXDR(),
+    feeBumpTransactionXdr: feeBumpTx.toXDR(),
   };
 }
 
