@@ -7,29 +7,38 @@
  */
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { WalletProvider } from '@/lib/WalletContext';
 import { Toaster } from 'react-hot-toast';
 import NavBar from '@/components/ui/NavBar';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+import Footer from '@/components/ui/Footer';
 
 export const metadata: Metadata = {
   title: 'StellarPay — Send Money Like a Message',
   description: 'Instant, transparent, near-zero-fee money transfers powered by Stellar blockchain.',
   keywords: ['stellar', 'blockchain', 'money transfer', 'remittance', 'xlm'],
+  openGraph: {
+    title: 'StellarPay — Send Money Like a Message',
+    description: 'Instant Stellar testnet transfers with live INR pricing and transparent fees.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'StellarPay',
+    description: 'Instant Stellar testnet transfers with live INR pricing and transparent fees.',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en">
       <body className="bg-surface text-white min-h-screen antialiased">
         <WalletProvider>
           <NavBar />
           <main className="max-w-5xl mx-auto px-4 py-8">
             {children}
           </main>
+          <Footer />
           <Toaster
             position="top-right"
             toastOptions={{
