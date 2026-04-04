@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@/lib/WalletContext';
 import { ArrowUpRight, ArrowDownLeft, ExternalLink, RefreshCw, Clock } from 'lucide-react';
@@ -13,9 +13,12 @@ import { xlmToInr } from '@/lib/stellar';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 
+type Filter = 'all' | 'sent' | 'received';
+
 export default function HistoryPage() {
   const router = useRouter();
   const { publicKey, transactions, isLoading, refreshBalance } = useWallet();
+  const [filter, setFilter] = useState<Filter>('all');
 
   useEffect(() => {
     if (!publicKey) router.replace('/');
@@ -47,6 +50,24 @@ export default function HistoryPage() {
         </button>
       </div>
 
+      {/* Filter tabs */}
+      <div className="flex gap-2">
+        {(['all', 'sent', 'received'] as Filter[]).map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={clsx(
+              'px-4 py-1.5 rounded-xl text-sm font-medium capitalize transition-colors',
+              filter === f
+                ? 'bg-brand-500/20 text-brand-400 border border-brand-500/40'
+                : 'text-slate-500 hover:text-slate-300 border border-transparent'
+            )}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
       <div className="card">
         {isLoading ? (
           <div className="flex justify-center py-16">
@@ -60,7 +81,7 @@ export default function HistoryPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-1">
-            {transactions.map((tx, i) => {
+            {transactions.filter(tx => filter === 'all' || tx.type === filter).map((tx, i) => {
               const amtInr = xlmToInr(parseFloat(tx.amount)).toFixed(2);
               return (
                 <div
@@ -124,25 +145,20 @@ export default function HistoryPage() {
 
       {/* Summary stats */}
       {transactions.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            {
-              label: 'Total Sent',
-              value: transactions.filter(t => t.type === 'sent')
-                .reduce((s, t) => s + parseFloat(t.amount), 0).toFixed(2) + ' XLM',
-            },
-            {
-              label: 'Total Received',
-              value: transactions.filter(t => t.type === 'received')
-                .reduce((s, t) => s + parseFloat(t.amount), 0).toFixed(2) + ' XLM',
-            },
-            {
-              label: 'Transactions',
-              value: String(transactions.length),
-            },
-          ].map(({ label, value }) => (
+        <div className="grid grid-cols-4 gap-3">
+          {(() => {
+            const sent     = transactions.filter(t => t.type === 'sent').reduce((s, t) => s + parseFloat(t.amount), 0);
+            const received = transactions.filter(t => t.type === 'received').reduce((s, t) => s + parseFloat(t.amount), 0);
+            const net      = received - sent;
+            return [
+              { label: 'Total Sent',     value: sent.toFixed(2) + ' XLM',                color: 'text-red-400'     },
+              { label: 'Total Received', value: received.toFixed(2) + ' XLM',            color: 'text-emerald-400' },
+              { label: 'Net Flow',       value: (net >= 0 ? '+' : '') + net.toFixed(2) + ' XLM', color: net >= 0 ? 'text-emerald-400' : 'text-red-400' },
+              { label: 'Transactions',   value: String(transactions.length),             color: 'text-brand-400'   },
+            ];
+          })().map(({ label, value, color }) => (
             <div key={label} className="card text-center py-4">
-              <div className="text-lg font-bold text-brand-400">{value}</div>
+              <div className={`text-lg font-bold ${color}`}>{value}</div>
               <div className="text-xs text-slate-500 mt-1">{label}</div>
             </div>
           ))}
