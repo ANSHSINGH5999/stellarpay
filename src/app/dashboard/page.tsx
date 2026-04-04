@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useWallet } from '@/lib/WalletContext';
@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { publicKey, balance, transactions, isLoading, refreshBalance } = useWallet();
   const { xlmToInr: liveXlmToInr, rate, lastUpdated } = useStellarPrice();
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
   useEffect(() => { document.title = 'Dashboard — StellarPay'; }, []);
 
@@ -46,6 +47,7 @@ export default function DashboardPage() {
   const handleRefresh = async () => {
     const t = toast.loading('Refreshing…');
     await refreshBalance();
+    setLastRefreshed(new Date());
     toast.success('Updated!', { id: t });
   };
 
@@ -58,14 +60,21 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-slate-400 text-sm mt-1">Your Stellar testnet wallet</p>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className="btn-secondary flex items-center gap-2 py-2 px-4 text-sm"
-        >
-          <RefreshCw className={clsx('w-4 h-4', isLoading && 'animate-spin')} />
-          Refresh
-        </button>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="btn-secondary flex items-center gap-2 py-2 px-4 text-sm"
+          >
+            <RefreshCw className={clsx('w-4 h-4', isLoading && 'animate-spin')} />
+            Refresh
+          </button>
+          {lastRefreshed && (
+            <span className="text-xs text-slate-600">
+              Updated {lastRefreshed.toLocaleTimeString()}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ── Balance card ──────────────────────────────────────────────────── */}
