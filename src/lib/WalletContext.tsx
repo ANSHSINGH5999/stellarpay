@@ -40,6 +40,7 @@ interface WalletState {
   isLoading:    boolean;
   isFunded:     boolean;
   error:        string | null;
+  createdAt:    string | null;
 }
 
 interface WalletContextValue extends WalletState {
@@ -62,6 +63,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     isLoading:    false,
     isFunded:     false,
     error:        null,
+    createdAt:    null,
   });
 
   // ── Load from localStorage on mount ───────────────────────────────────────
@@ -69,7 +71,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem('stellarpay_wallet');
     if (stored) {
       try {
-        const { publicKey, secretKey } = JSON.parse(stored);
+        const { publicKey, secretKey, createdAt } = JSON.parse(stored);
+        setState(s => ({ ...s, createdAt: createdAt ?? null }));
         loadAccountData(publicKey, secretKey);
       } catch {
         localStorage.removeItem('stellarpay_wallet');
@@ -110,8 +113,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       // Fund with Friendbot (testnet only)
       await fundTestnetAccount(publicKey);
 
-      // Save to localStorage
-      localStorage.setItem('stellarpay_wallet', JSON.stringify({ publicKey, secretKey }));
+      // Save to localStorage with creation timestamp
+      localStorage.setItem('stellarpay_wallet', JSON.stringify({ publicKey, secretKey, createdAt: new Date().toISOString() }));
 
       // Load balance
       await loadAccountData(publicKey, secretKey);
@@ -161,6 +164,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       isLoading:    false,
       isFunded:     false,
       error:        null,
+      createdAt:    null,
     });
   };
 
