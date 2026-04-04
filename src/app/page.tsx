@@ -98,8 +98,8 @@ export default function HomePage() {
         <div className="flex justify-center gap-8 mt-8">
           {[
             { label: 'Transfer time', value: '< 5 sec' },
-            { label: 'Network fee',   value: '₹0.003' },
-            { label: 'Transparent',   value: '100%' },
+            { label: 'Network fee',   value: '₹0.003'  },
+            { label: 'Beta users',    value: '30+'      },
           ].map(({ label, value }) => (
             <div key={label} className="text-center">
               <div className="text-2xl font-bold text-brand-400">{value}</div>
