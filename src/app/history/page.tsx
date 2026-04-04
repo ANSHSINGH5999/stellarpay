@@ -81,9 +81,17 @@ export default function HistoryPage() {
             <p className="font-medium">No transactions yet</p>
             <p className="text-sm mt-1">Your payment history will appear here.</p>
           </div>
-        ) : (
+        ) : (() => {
+            const filtered = transactions.filter(tx => filter === 'all' || tx.type === filter);
+            if (filtered.length === 0) return (
+              <div className="text-center py-12 text-slate-500">
+                <Clock className="w-8 h-8 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">No {filter} transactions found.</p>
+              </div>
+            );
+            return (
           <div className="flex flex-col gap-1">
-            {transactions.filter(tx => filter === 'all' || tx.type === filter).map((tx, i) => {
+            {filtered.map((tx, i) => {
               const amtInr = xlmToInr(parseFloat(tx.amount)).toFixed(2);
               return (
                 <div
@@ -142,7 +150,8 @@ export default function HistoryPage() {
               );
             })}
           </div>
-        )}
+            );
+          })()}
       </div>
 
       {/* Summary stats */}

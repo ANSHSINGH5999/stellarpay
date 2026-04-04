@@ -114,7 +114,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       await fundTestnetAccount(publicKey);
 
       // Save to localStorage with creation timestamp
-      localStorage.setItem('stellarpay_wallet', JSON.stringify({ publicKey, secretKey, createdAt: new Date().toISOString() }));
+      const createdAt = new Date().toISOString();
+      localStorage.setItem('stellarpay_wallet', JSON.stringify({ publicKey, secretKey, createdAt }));
+      setState(s => ({ ...s, createdAt }));
 
       // Load balance
       await loadAccountData(publicKey, secretKey);
