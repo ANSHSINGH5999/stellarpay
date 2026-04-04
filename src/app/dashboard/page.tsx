@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useWallet } from '@/lib/WalletContext';
 import {
   Send, RefreshCw, Copy, ExternalLink,
-  ArrowUpRight, ArrowDownLeft, Wallet, Clock, QrCode
+  ArrowUpRight, ArrowDownLeft, Wallet, Clock, QrCode, Gauge
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useStellarPrice } from '@/hooks/useStellarPrice';
@@ -26,6 +26,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { publicKey, balance, transactions, isLoading, refreshBalance } = useWallet();
   const { xlmToInr: liveXlmToInr, rate, lastUpdated } = useStellarPrice();
+
+  useEffect(() => { document.title = 'Dashboard — StellarPay'; }, []);
 
   // Redirect to home if no wallet
   useEffect(() => {
@@ -119,7 +121,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Quick actions ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Link
           href="/send"
           className="card flex flex-col items-center gap-3 py-6 hover:border-brand-500
@@ -157,6 +159,19 @@ export default function DashboardPage() {
           </div>
           <span className="font-semibold text-white text-sm">History</span>
           <span className="text-xs text-slate-500">View all txns</span>
+        </Link>
+
+        <Link
+          href="/ops"
+          className="card flex flex-col items-center gap-3 py-6 hover:border-brand-500
+                     transition-colors cursor-pointer group"
+        >
+          <div className="w-12 h-12 rounded-xl bg-brand-500/15 flex items-center justify-center
+                          group-hover:bg-brand-500/25 transition-colors">
+            <Gauge className="w-6 h-6 text-brand-300" />
+          </div>
+          <span className="font-semibold text-white text-sm">Ops Center</span>
+          <span className="text-xs text-slate-500">Metrics & security</span>
         </Link>
       </div>
 

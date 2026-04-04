@@ -44,6 +44,8 @@ export default function SendPage() {
   const [txResult,   setTxResult]   = useState<TxResult | null>(null);
   const [sendError,  setSendError]  = useState('');
 
+  useEffect(() => { document.title = 'Send Money — StellarPay'; }, []);
+
   // Redirect if no wallet
   useEffect(() => {
     if (!publicKey) router.replace('/');

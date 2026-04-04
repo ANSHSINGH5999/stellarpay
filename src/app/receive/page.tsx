@@ -23,6 +23,8 @@ export default function ReceivePage() {
   const { xlmToInr, rate } = useStellarPrice();
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => { document.title = 'Receive XLM — StellarPay'; }, []);
+
   useEffect(() => {
     if (!publicKey) router.replace('/');
   }, [publicKey, router]);

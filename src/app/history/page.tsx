@@ -20,6 +20,8 @@ export default function HistoryPage() {
   const { publicKey, transactions, isLoading, refreshBalance } = useWallet();
   const [filter, setFilter] = useState<Filter>('all');
 
+  useEffect(() => { document.title = 'History — StellarPay'; }, []);
+
   useEffect(() => {
     if (!publicKey) router.replace('/');
   }, [publicKey, router]);
