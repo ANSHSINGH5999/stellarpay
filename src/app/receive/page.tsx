@@ -132,6 +132,17 @@ export default function ReceivePage() {
             <Share2 className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Copy as payment URI */}
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(`web+stellar:pay?destination=${publicKey}`);
+            toast.success('Payment URI copied!');
+          }}
+          className="w-full text-xs text-slate-500 hover:text-brand-400 transition-colors py-2 font-mono"
+        >
+          Copy as web+stellar: payment URI
+        </button>
       </div>
 
       {/* Instructions card */}
