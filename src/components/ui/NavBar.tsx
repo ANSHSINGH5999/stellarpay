@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useWallet } from '@/lib/WalletContext';
-import { Zap, LayoutDashboard, Send, Clock, ChevronDown, QrCode, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Zap, LayoutDashboard, Send, Clock, ChevronDown, QrCode, Menu, X, Gauge } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 
 const NAV_LINKS = [
@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/send',      label: 'Send',      icon: Send },
   { href: '/receive',   label: 'Receive',   icon: QrCode },
   { href: '/history',   label: 'History',   icon: Clock },
+  { href: '/ops',       label: 'Ops',       icon: Gauge },
 ];
 
 export default function NavBar() {
@@ -20,6 +21,17 @@ export default function NavBar() {
   const { publicKey, balance, disconnect } = useWallet();
   const [walletMenuOpen, setWalletMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setWalletMenuOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
   const shortAddress = publicKey
     ? `${publicKey.slice(0, 4)}…${publicKey.slice(-4)}`
