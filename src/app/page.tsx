@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@/lib/WalletContext';
-import { Zap, Plus, Key, AlertTriangle, Eye, EyeOff, ArrowRight, CheckCircle2, Sparkles, ShieldCheck, Coins } from 'lucide-react';
+import { Zap, Plus, Key, AlertTriangle, Eye, EyeOff, Sparkles, ShieldCheck, Coins } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -14,30 +14,25 @@ export default function HomePage() {
   const [secretInput, setSecretInput] = useState('');
   const [showSecret, setShowSecret] = useState(false);
 
-  // -- Already connected → show go-to-dashboard prompt --
-  if (publicKey) {
+  // -- Auto-redirect when wallet connects (covers both auto-reconnect and manual connect) --
+  useEffect(() => {
+    if (publicKey) {
+      router.replace('/dashboard');
+    }
+  }, [publicKey, router]);
+
+  // -- Show reconnecting screen while auto-connect is in progress --
+  if (isLoading && !publicKey) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center gap-6">
-        <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
-          <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Wallet Connected!</h1>
-          <p className="text-white/85 font-mono text-sm break-all max-w-md">
-            {publicKey}
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Link href="/dashboard" className="btn-primary flex items-center gap-2">
-            Go to Dashboard <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link href="/send" className="btn-secondary flex items-center gap-2">
-            Send Money
-          </Link>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
+        <div className="w-12 h-12 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+        <p className="text-white/60 text-sm">Reconnecting wallet…</p>
       </div>
     );
   }
+
+  // -- Already connected (brief flash before redirect) --
+  if (publicKey) return null;
 
   // -- Create wallet handler --
   const handleCreate = async () => {
