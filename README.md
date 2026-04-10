@@ -13,7 +13,7 @@ Instant, transparent Stellar testnet transfers — with a live INR/XLM rate, tra
 
 | Resource | URL |
 |---|---|
-| App (Vercel) | [stellarpay.vercel.app](https://stellarpay.vercel.app) |
+| App (Vercel) | https://stellarpay-bxs8.vercel.app/dashboard |
 | Stellar Explorer | [stellar.expert/explorer/testnet](https://stellar.expert/explorer/testnet) |
 
 ---
