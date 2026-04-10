@@ -72,6 +72,11 @@ export function generateKeypair(): { publicKey: string; secretKey: string } {
   };
 }
 
+// ── 1b. Derive public key from a secret key ───────────────────────────────────
+export function derivePublicKey(secretKey: string): string {
+  return Keypair.fromSecret(secretKey.trim()).publicKey();
+}
+
 // ── 2. Fund a new testnet account via Friendbot ───────────────────────────────
 export async function fundTestnetAccount(publicKey: string): Promise<void> {
   const response = await fetch(

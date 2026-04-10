@@ -25,6 +25,7 @@ import React, {
 } from 'react';
 import {
   generateKeypair,
+  derivePublicKey,
   fundTestnetAccount,
   getAccountBalance,
   getRecentTransactions,
@@ -126,6 +127,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         isLoading: false,
         error: err instanceof Error ? err.message : 'Wallet creation failed',
       }));
+      throw err;
     }
   };
 
@@ -133,19 +135,16 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const importWallet = async (secretKey: string) => {
     setState(s => ({ ...s, isLoading: true, error: null }));
     try {
-      // Derive public key from secret
-      const { Keypair } = await import('@stellar/stellar-sdk');
-      const kp = Keypair.fromSecret(secretKey.trim());
-      const publicKey = kp.publicKey();
-
+      const publicKey = derivePublicKey(secretKey);
       localStorage.setItem('stellarpay_wallet', JSON.stringify({ publicKey, secretKey }));
       await loadAccountData(publicKey, secretKey);
-    } catch {
+    } catch (err) {
       setState(s => ({
         ...s,
         isLoading: false,
         error: 'Invalid secret key. Please check and try again.',
       }));
+      throw err;
     }
   };
 
