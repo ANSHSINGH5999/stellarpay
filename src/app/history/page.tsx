@@ -17,15 +17,20 @@ type Filter = 'all' | 'sent' | 'received';
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { publicKey, transactions, isLoading, refreshBalance } = useWallet();
+  const { publicKey, transactions, isLoading, isInitializing, refreshBalance } = useWallet();
   const [filter, setFilter] = useState<Filter>('all');
 
   useEffect(() => { document.title = 'History — StellarPay'; }, []);
 
   useEffect(() => {
-    if (!publicKey) router.replace('/');
-  }, [publicKey, router]);
+    if (!isInitializing && !publicKey) router.replace('/');
+  }, [publicKey, isInitializing, router]);
 
+  if (isInitializing) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+    </div>
+  );
   if (!publicKey) return null;
 
   const handleRefresh = async () => {

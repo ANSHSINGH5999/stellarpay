@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 export default function HomePage() {
   const router = useRouter();
-  const { publicKey, createWallet, importWallet, isLoading, error } = useWallet();
+  const { publicKey, createWallet, importWallet, isLoading, isInitializing, error } = useWallet();
   const [showImport, setShowImport] = useState(false);
   const [secretInput, setSecretInput] = useState('');
   const [showSecret, setShowSecret] = useState(false);
@@ -21,8 +21,8 @@ export default function HomePage() {
     }
   }, [publicKey, router]);
 
-  // -- Show reconnecting screen while auto-connect is in progress --
-  if (isLoading && !publicKey) {
+  // -- Show reconnecting screen while localStorage check is in progress --
+  if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
         <div className="w-12 h-12 rounded-full border-2 border-white/20 border-t-white animate-spin" />

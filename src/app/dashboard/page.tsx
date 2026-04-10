@@ -24,17 +24,22 @@ import clsx from 'clsx';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { publicKey, balance, transactions, isLoading, refreshBalance } = useWallet();
+  const { publicKey, balance, transactions, isLoading, isInitializing, refreshBalance } = useWallet();
   const { xlmToInr: liveXlmToInr, rate, lastUpdated } = useStellarPrice();
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
   useEffect(() => { document.title = 'Dashboard — StellarPay'; }, []);
 
-  // Redirect to home if no wallet
+  // Wait for localStorage check before redirecting
   useEffect(() => {
-    if (!publicKey) router.replace('/');
-  }, [publicKey, router]);
+    if (!isInitializing && !publicKey) router.replace('/');
+  }, [publicKey, isInitializing, router]);
 
+  if (isInitializing) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+    </div>
+  );
   if (!publicKey) return null;
 
   const balanceInr = liveXlmToInr(parseFloat(balance)).toFixed(2);

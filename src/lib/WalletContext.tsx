@@ -7,6 +7,8 @@
  *   - balance
  *   - recent transactions
  *   - loading / error states
+ *   - isInitializing — true until the localStorage check on mount completes.
+ *     Protected pages must wait for this to be false before redirecting.
  *
  * Wallet is persisted to localStorage so it survives page refresh.
  * WARNING: In production, NEVER store secret keys in localStorage —
@@ -34,38 +36,42 @@ import {
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface WalletState {
-  publicKey:    string | null;
-  secretKey:    string | null;
-  balance:      string;
-  transactions: RecentTx[];
-  isLoading:    boolean;
-  isFunded:     boolean;
-  error:        string | null;
-  createdAt:    string | null;
+  publicKey:      string | null;
+  secretKey:      string | null;
+  balance:        string;
+  transactions:   RecentTx[];
+  isLoading:      boolean;
+  isInitializing: boolean;   // true until first localStorage check is done
+  isFunded:       boolean;
+  error:          string | null;
+  createdAt:      string | null;
 }
 
 interface WalletContextValue extends WalletState {
-  createWallet:  () => Promise<void>;
-  importWallet:  (secretKey: string) => Promise<void>;
+  createWallet:   () => Promise<void>;
+  importWallet:   (secretKey: string) => Promise<void>;
   refreshBalance: () => Promise<void>;
-  disconnect:    () => void;
+  disconnect:     () => void;
 }
+
+const DEFAULT_STATE: WalletState = {
+  publicKey:      null,
+  secretKey:      null,
+  balance:        '0',
+  transactions:   [],
+  isLoading:      false,
+  isInitializing: true,
+  isFunded:       false,
+  error:          null,
+  createdAt:      null,
+};
 
 // ── Context ──────────────────────────────────────────────────────────────────
 const WalletContext = createContext<WalletContextValue | null>(null);
 
 // ── Provider ─────────────────────────────────────────────────────────────────
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<WalletState>({
-    publicKey:    null,
-    secretKey:    null,
-    balance:      '0',
-    transactions: [],
-    isLoading:    false,
-    isFunded:     false,
-    error:        null,
-    createdAt:    null,
-  });
+  const [state, setState] = useState<WalletState>(DEFAULT_STATE);
 
   // ── Load balance + transactions ────────────────────────────────────────────
   const loadAccountData = useCallback(async (pub: string, sec: string) => {
@@ -92,34 +98,43 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ── Load from localStorage on mount ───────────────────────────────────────
+  // Sets publicKey synchronously (in the same setState) so protected pages
+  // don't redirect before the wallet is restored.
   useEffect(() => {
     const stored = localStorage.getItem('stellarpay_wallet');
     if (stored) {
       try {
         const { publicKey, secretKey, createdAt } = JSON.parse(stored);
-        setState(s => ({ ...s, createdAt: createdAt ?? null }));
+        // Set publicKey + mark initializing done in one update so the
+        // dashboard's !publicKey guard never fires on a valid session.
+        setState(s => ({
+          ...s,
+          publicKey,
+          secretKey,
+          createdAt:      createdAt ?? null,
+          isLoading:      true,
+          isInitializing: false,
+        }));
+        // Fetch live balance & txs in the background
         loadAccountData(publicKey, secretKey);
       } catch {
         localStorage.removeItem('stellarpay_wallet');
+        setState(s => ({ ...s, isInitializing: false }));
       }
+    } else {
+      setState(s => ({ ...s, isInitializing: false }));
     }
-  }, [loadAccountData]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Create new wallet ──────────────────────────────────────────────────────
   const createWallet = async () => {
     setState(s => ({ ...s, isLoading: true, error: null }));
     try {
       const { publicKey, secretKey } = generateKeypair();
-
-      // Fund with Friendbot (testnet only)
       await fundTestnetAccount(publicKey);
-
-      // Save to localStorage with creation timestamp
       const createdAt = new Date().toISOString();
       localStorage.setItem('stellarpay_wallet', JSON.stringify({ publicKey, secretKey, createdAt }));
-      setState(s => ({ ...s, createdAt }));
-
-      // Load balance
+      setState(s => ({ ...s, createdAt, isInitializing: false }));
       await loadAccountData(publicKey, secretKey);
     } catch (err) {
       setState(s => ({
@@ -137,6 +152,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     try {
       const publicKey = derivePublicKey(secretKey);
       localStorage.setItem('stellarpay_wallet', JSON.stringify({ publicKey, secretKey }));
+      setState(s => ({ ...s, isInitializing: false }));
       await loadAccountData(publicKey, secretKey);
     } catch (err) {
       setState(s => ({
@@ -157,16 +173,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // ── Disconnect / logout ────────────────────────────────────────────────────
   const disconnect = () => {
     localStorage.removeItem('stellarpay_wallet');
-    setState({
-      publicKey:    null,
-      secretKey:    null,
-      balance:      '0',
-      transactions: [],
-      isLoading:    false,
-      isFunded:     false,
-      error:        null,
-      createdAt:    null,
-    });
+    setState({ ...DEFAULT_STATE, isInitializing: false });
   };
 
   return (

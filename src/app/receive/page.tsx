@@ -19,16 +19,21 @@ import { useStellarPrice } from '@/hooks/useStellarPrice';
 
 export default function ReceivePage() {
   const router = useRouter();
-  const { publicKey, balance } = useWallet();
+  const { publicKey, balance, isInitializing } = useWallet();
   const { xlmToInr, rate } = useStellarPrice();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => { document.title = 'Receive XLM — StellarPay'; }, []);
 
   useEffect(() => {
-    if (!publicKey) router.replace('/');
-  }, [publicKey, router]);
+    if (!isInitializing && !publicKey) router.replace('/');
+  }, [publicKey, isInitializing, router]);
 
+  if (isInitializing) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+    </div>
+  );
   if (!publicKey) return null;
 
   const balanceInr = xlmToInr(parseFloat(balance)).toFixed(2);

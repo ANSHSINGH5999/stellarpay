@@ -33,7 +33,7 @@ interface TxResult {
 
 export default function SendPage() {
   const router     = useRouter();
-  const { publicKey, secretKey, balance, refreshBalance } = useWallet();
+  const { publicKey, secretKey, balance, refreshBalance, isInitializing } = useWallet();
   const { rate: xlmRate } = useStellarPrice();
 
   // Form state
@@ -46,10 +46,10 @@ export default function SendPage() {
 
   useEffect(() => { document.title = 'Send Money — StellarPay'; }, []);
 
-  // Redirect if no wallet
+  // Wait for localStorage check before redirecting
   useEffect(() => {
-    if (!publicKey) router.replace('/');
-  }, [publicKey, router]);
+    if (!isInitializing && !publicKey) router.replace('/');
+  }, [publicKey, isInitializing, router]);
 
   // ── Fee breakdown — must be before any early return (Rules of Hooks) ──────
   const feeBreakdown = useMemo(() => {
@@ -58,6 +58,11 @@ export default function SendPage() {
     return getFeeBreakdown(amount, xlmRate);
   }, [amountInr, xlmRate]);
 
+  if (isInitializing) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+    </div>
+  );
   if (!publicKey || !secretKey) return null;
 
   // ── Validation ─────────────────────────────────────────────────────────────
