@@ -21,12 +21,11 @@ export default function HomePage() {
     }
   }, [publicKey, router]);
 
-  // -- Show reconnecting screen while localStorage check is in progress --
+  // -- Show loading screen while localStorage check is in progress --
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
-        <div className="w-12 h-12 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-        <p className="text-white/60 text-sm">Reconnecting wallet…</p>
+        <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
       </div>
     );
   }
@@ -39,10 +38,10 @@ export default function HomePage() {
     const toastId = toast.loading('Creating wallet & requesting testnet funds…');
     try {
       await createWallet();
-      toast.success('Wallet created! You got 10,000 test XLM 🎉', { id: toastId });
-      router.push('/dashboard');
-    } catch {
-      toast.error('Failed to create wallet. Try again.', { id: toastId });
+      toast.success('Wallet created! You got 10,000 test XLM', { id: toastId });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to create wallet. Try again.';
+      toast.error(msg, { id: toastId });
     }
   };
 
@@ -56,9 +55,9 @@ export default function HomePage() {
     try {
       await importWallet(secretInput.trim());
       toast.success('Wallet imported!', { id: toastId });
-      router.push('/dashboard');
-    } catch {
-      toast.error(error || 'Invalid secret key', { id: toastId });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Invalid secret key. Please check and try again.';
+      toast.error(msg, { id: toastId });
     }
   };
 
@@ -148,11 +147,11 @@ export default function HomePage() {
                 className="btn-primary flex items-center justify-center gap-2 w-full"
               >
                 {isLoading ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                 ) : (
                   <Plus className="w-4 h-4" />
                 )}
-                Create New Wallet
+                {isLoading ? 'Creating wallet…' : 'Create New Wallet'}
               </button>
 
               <button
@@ -186,7 +185,8 @@ export default function HomePage() {
                 <span>Demo only. Never enter a real mainnet secret key in a web app.</span>
               </div>
 
-              <button onClick={handleImport} disabled={isLoading} className="btn-primary w-full">
+              <button onClick={handleImport} disabled={isLoading} className="btn-primary flex items-center justify-center gap-2 w-full">
+                {isLoading && <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />}
                 {isLoading ? 'Importing…' : 'Import Wallet'}
               </button>
               <button

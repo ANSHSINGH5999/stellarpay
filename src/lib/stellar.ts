@@ -79,12 +79,24 @@ export function derivePublicKey(secretKey: string): string {
 
 // ── 2. Fund a new testnet account via Friendbot ───────────────────────────────
 export async function fundTestnetAccount(publicKey: string): Promise<void> {
-  const response = await fetch(
-    `https://friendbot.stellar.org?addr=${encodeURIComponent(publicKey)}`
-  );
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Friendbot failed: ${text}`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30_000);
+  try {
+    const response = await fetch(
+      `https://friendbot.stellar.org?addr=${encodeURIComponent(publicKey)}`,
+      { signal: controller.signal }
+    );
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Friendbot failed (${response.status}): ${text.slice(0, 120)}`);
+    }
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('Friendbot timed out. Try again.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
