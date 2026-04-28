@@ -149,9 +149,9 @@ export const securityChecklist: SecurityCheck[] = [
     detail: 'Every transaction hash and wallet can be opened in Stellar Expert for verification.',
   },
   {
-    category: 'Soroban contract access control',
+    category: 'On-chain access control — Claimable Balance escrow',
     status: 'complete',
-    detail: 'Payment contract fee changes and initialization gated by owner.require_auth(); escrow release gated by sender.',
+    detail: 'Escrow enforced by Stellar network predicates: only the receiver can claim before expiry; only the sender can refund after. No off-chain trust required.',
   },
   {
     category: 'Production wallet storage hardening',
@@ -179,8 +179,8 @@ export const indexingStages: IndexingStage[] = [
     detail: 'Ops dashboard derives DAU, transaction totals, and retention from the verified-user cohort and refresh cadence.',
   },
   {
-    name: 'On-chain indexing (Soroban)',
-    detail: 'Payment contract stores immutable on-chain records queryable by ID via get_payment(id). Escrow states indexed as Pending / Released / Refunded.',
+    name: 'On-chain indexing (Claimable Balances)',
+    detail: 'Escrow states (Active / Claimed / Refunded) are indexed directly from Horizon claimable balance records — no custom contract needed. Queryable by claimant or sponsor.',
   },
   {
     name: 'Operator visibility',
@@ -217,7 +217,7 @@ export const submissionChecklist: SubmissionItem[] = [
   {
     name: 'Community contribution link',
     status: 'complete',
-    evidence: 'Twitter/X post published — link recorded in docs/community-contribution.md.',
+    evidence: 'Twitter/X post live at x.com/anshansh5999/status/2049018028143353920 — includes repo, live demo, and Stellar hashtags.',
   },
   {
     name: 'Soroban smart contracts',

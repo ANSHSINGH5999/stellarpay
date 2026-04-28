@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'StellarPay — Soroban dApp',
     description: 'Instant Stellar testnet transfers with live INR pricing, transparent fees, and Soroban smart contracts.',
-    creator: '@ANSHSINGH5999',
+    creator: '@anshansh5999',
   },
 };
 

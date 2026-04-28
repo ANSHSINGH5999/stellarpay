@@ -15,7 +15,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-const FALLBACK_RATE = parseFloat(process.env.NEXT_PUBLIC_XLM_TO_INR || '10.5');
+const _parsed       = parseFloat(process.env.NEXT_PUBLIC_XLM_TO_INR ?? '');
+const FALLBACK_RATE = Number.isFinite(_parsed) && _parsed > 0 ? _parsed : 10.5;
 const REFRESH_MS    = 60_000;  // 60 seconds
 
 interface PriceState {

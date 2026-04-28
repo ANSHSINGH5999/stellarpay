@@ -1,27 +1,22 @@
-/**
- * WalletCard.tsx
- * ─────────────────────────────────────────────
- * Compact wallet display card, reusable across pages.
- * Shows: balance, address (truncated), copy + explorer link.
- */
-
 'use client';
 
 import { useState } from 'react';
 import { Copy, ExternalLink, Check, Wallet } from 'lucide-react';
-import { xlmToInr } from '@/lib/stellar';
+import { useStellarPrice } from '@/hooks/useStellarPrice';
 import clsx from 'clsx';
 
 interface WalletCardProps {
   publicKey: string;
   balance:   string;
-  compact?:  boolean;   // compact mode for sidebars / small spaces
+  compact?:  boolean;
 }
 
 export default function WalletCard({ publicKey, balance, compact = false }: WalletCardProps) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied]   = useState(false);
+  const { xlmToInr }          = useStellarPrice();
 
-  const balanceInr = xlmToInr(parseFloat(balance)).toFixed(2);
+  const balanceNum = parseFloat(balance);
+  const balanceInr = xlmToInr(balanceNum).toFixed(2);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(publicKey);
@@ -36,7 +31,7 @@ export default function WalletCard({ publicKey, balance, compact = false }: Wall
       <div className="flex items-center gap-2 bg-surface-card rounded-xl px-3 py-2 border border-surface-muted">
         <Wallet className="w-4 h-4 text-brand-400 flex-shrink-0" />
         <span className="text-sm font-mono text-slate-300">{short}</span>
-        <span className="text-sm font-bold text-brand-400 ml-auto">{parseFloat(balance).toFixed(2)} XLM</span>
+        <span className="text-sm font-bold text-brand-400 ml-auto">{balanceNum.toFixed(2)} XLM</span>
       </div>
     );
   }
@@ -49,16 +44,14 @@ export default function WalletCard({ publicKey, balance, compact = false }: Wall
         <span className="ml-auto badge-info">Testnet</span>
       </div>
 
-      {/* Balance */}
       <div className="text-center py-4">
         <div className="text-3xl font-extrabold text-white">
-          {parseFloat(balance).toFixed(4)}{' '}
+          {balanceNum.toFixed(4)}{' '}
           <span className="text-brand-400 text-xl">XLM</span>
         </div>
-        <div className="text-slate-400 mt-1">≈ ₹{balanceInr}</div>
+        <div className="text-slate-400 mt-1">≈ ₹{balanceInr} <span className="text-emerald-500 text-xs">live</span></div>
       </div>
 
-      {/* Address */}
       <div className="flex items-center gap-2 bg-surface rounded-xl p-3 mt-2">
         <span className="text-xs font-mono text-slate-400 flex-1 truncate">{publicKey}</span>
         <button

@@ -583,7 +583,7 @@ await submitSponsoredPayment(senderSecret, sponsorSecret, receiverPublic, amount
             },
             {
               label: 'Escrow Contract',
-              desc: 'Time-locked escrow with create → release/refund lifecycle for trustless conditional payments.',
+              desc: 'Time-locked escrow is live via Stellar Claimable Balances (no deployment needed). Soroban contract available for future on-chain fee routing.',
               info: escrowContractInfo,
               count: escrowCount,
               countLabel: 'active escrows',
@@ -650,12 +650,12 @@ await submitSponsoredPayment(senderSecret, sponsorSecret, receiverPublic, amount
         </div>
 
         <div className="mt-4 rounded-2xl border border-brand-500/20 bg-brand-500/5 p-4 text-sm text-slate-300">
-          <div className="font-semibold text-white mb-1">Frontend integration</div>
+          <div className="font-semibold text-white mb-1">Integration status</div>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Contract calls are wired in <code className="text-brand-300">src/lib/soroban.ts</code> using
-            the Stellar SDK v12 Soroban RPC client. Payments route through <code className="text-brand-300">simulateContractPayment()</code>,
-            and escrow creation through <code className="text-brand-300">simulateCreateEscrow()</code>.
-            Deploy the contracts, set the env vars, and the integration is live.
+            Escrow is <span className="text-emerald-400 font-semibold">live on testnet</span> via Stellar native Claimable Balances
+            (see <code className="text-brand-300">src/lib/stellar.ts → createEscrow()</code>).
+            Soroban payment contract simulation is wired in <code className="text-brand-300">src/lib/soroban.ts</code> — set
+            <code className="text-brand-300"> NEXT_PUBLIC_PAYMENT_CONTRACT_ID</code> after deployment to activate on-chain fee routing.
           </p>
         </div>
       </section>
