@@ -328,12 +328,17 @@ export { getServer as getHorizonServer };
 
 // ── 10. Helpers for Freighter (build-only, no secret key needed) ─────────────
 
-// Sign a transaction locally with a secret key and return the signed XDR
+// Sign a transaction XDR with a local secret key and return the signed XDR.
+// We parse with fromXDR, sign, then call toEnvelope().toXDR('base64') directly
+// (same bytes as toXDR()) so the result can be submitted verbatim to Horizon.
 export function signTxLocally(secretKey: string, unsignedXdr: string): string {
   const kp = Keypair.fromSecret(secretKey);
   const tx = TransactionBuilder.fromXDR(unsignedXdr, Networks.TESTNET);
+  if (!('sign' in tx)) throw new Error('Expected a Transaction, not a FeeBumpTransaction');
   tx.sign(kp);
-  return tx.toXDR();
+  // toEnvelope().toXDR('base64') is the canonical signed bytes Horizon expects
+  return (tx as { toEnvelope(): { toXDR(fmt: string): Buffer } })
+    .toEnvelope().toXDR('base64').toString();
 }
 
 // Normalize an XLM amount string to 7 decimal places as required by Stellar
@@ -419,23 +424,45 @@ export async function buildClaimBalanceTxXdr(
   return tx.toXDR();
 }
 
-// Submit a pre-signed transaction XDR and return a TransactionResult.
-// Throws a human-readable error that includes the Horizon result codes on failure.
+// Submit a pre-signed transaction XDR directly to Horizon via HTTP POST.
+// We bypass TransactionBuilder.fromXDR → submitTransaction to avoid any
+// SDK re-serialization that can alter the envelope bytes and invalidate the
+// signature (tx_bad_auth). The signed XDR is sent exactly as-is.
 export async function submitSignedTxXdr(signedXdr: string): Promise<TransactionResult> {
   const startTime = Date.now();
-  const tx = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
+
+  const response = await fetch(`${TESTNET_URL}/transactions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `tx=${encodeURIComponent(signedXdr)}`,
+  });
+
+  let json: Record<string, unknown>;
   try {
-    const result = await getServer().submitTransaction(tx);
-    return {
-      hash: result.hash,
-      fee: '0.00001',
-      timeSeconds: Math.round((Date.now() - startTime) / 1000),
-      ledger: result.ledger,
-      explorerUrl: `https://stellar.expert/explorer/testnet/tx/${result.hash}`,
-    };
-  } catch (err) {
-    throw new Error(extractHorizonError(err));
+    json = await response.json() as Record<string, unknown>;
+  } catch {
+    throw new Error(`Horizon returned ${response.status}`);
   }
+
+  if (!response.ok) {
+    const extras = json?.extras as Record<string, unknown> | undefined;
+    const codes  = extras?.result_codes as Record<string, unknown> | undefined;
+    if (codes) {
+      const ops = Array.isArray(codes.operations)
+        ? (codes.operations as string[]).join(', ')
+        : '';
+      throw new Error(`Transaction failed: ${String(codes.transaction ?? '')}${ops ? ` — ${ops}` : ''}`);
+    }
+    throw new Error(`Transaction failed: ${response.status}`);
+  }
+
+  return {
+    hash:        String(json.hash ?? ''),
+    fee:         '0.00001',
+    timeSeconds: Math.round((Date.now() - startTime) / 1000),
+    ledger:      Number(json.ledger ?? 0),
+    explorerUrl: `https://stellar.expert/explorer/testnet/tx/${String(json.hash ?? '')}`,
+  };
 }
 
 // ── 8. Escrow via Stellar Claimable Balances ─────────────────────────────────
