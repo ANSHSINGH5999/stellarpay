@@ -1,0 +1,39 @@
+.waves {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.waves::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(251, 191, 36, 0.18), transparent 28%),
+    radial-gradient(circle at 82% 16%, rgba(244, 114, 182, 0.14), transparent 24%),
+    radial-gradient(circle at 52% 82%, rgba(74, 222, 128, 0.12), transparent 30%);
+}
+
+.waves::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.04), transparent 56%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 36%, rgba(0, 0, 0, 0.08));
+  mix-blend-mode: screen;
+}
+
+.waves-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  filter: saturate(1.15) brightness(1.1);
+  mix-blend-mode: screen;
+}
