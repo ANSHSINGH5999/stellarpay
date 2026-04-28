@@ -18,6 +18,12 @@ import {
   TESTNET_PASSPHRASE,
   RecentTx,
 } from '@/lib/stellar';
+import {
+  freighterIsConnected,
+  freighterRequestAccess,
+  freighterGetNetworkPassphrase,
+  freighterSignTransaction,
+} from '@/lib/freighter';
 
 export type ConnectionType = 'local' | 'freighter';
 
@@ -163,10 +169,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const connectFreighter = async () => {
     setState(s => ({ ...s, isLoading: true, error: null }));
     try {
-      const freighter = await import('@stellar/freighter-api');
-
-      // 1. Check extension is installed
-      const { isConnected: installed } = await freighter.isConnected();
+      // 1. Check extension is installed (times out in 3s if not present)
+      const installed = await freighterIsConnected();
       if (!installed) {
         throw new Error(
           'Freighter not found. Install the Freighter browser extension, then try again.'
@@ -174,16 +178,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       }
 
       // 2. Request access — shows Freighter permission popup
-      const accessResult = await freighter.requestAccess();
-      if (accessResult.error) {
-        throw new Error(accessResult.error.message || 'Freighter access denied');
-      }
-      const publicKey = accessResult.address;
-      if (!publicKey) throw new Error('No address returned from Freighter');
+      const publicKey = await freighterRequestAccess();
 
       // 3. Verify Freighter is on testnet
-      const networkResult = await freighter.getNetworkDetails();
-      if (!networkResult.error && networkResult.networkPassphrase !== TESTNET_PASSPHRASE) {
+      const passphrase = await freighterGetNetworkPassphrase();
+      if (passphrase && passphrase !== TESTNET_PASSPHRASE) {
         throw new Error(
           'Freighter is on the wrong network. Switch to "Testnet" in Freighter settings and try again.'
         );
@@ -218,12 +217,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // ── Sign a transaction XDR (routes to Freighter or local keypair) ──────────
   const signTx = useCallback(async (unsignedXdr: string): Promise<string> => {
     if (state.connectionType === 'freighter') {
-      const freighter = await import('@stellar/freighter-api');
-      const result = await freighter.signTransaction(unsignedXdr, {
-        networkPassphrase: TESTNET_PASSPHRASE,
-      });
-      if (result.error) throw new Error(result.error.message || 'Freighter signing failed');
-      return result.signedTxXdr;
+      return freighterSignTransaction(unsignedXdr, TESTNET_PASSPHRASE);
     }
     if (state.connectionType === 'local' && state.secretKey) {
       return signTxLocally(state.secretKey, unsignedXdr);
