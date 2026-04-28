@@ -25,6 +25,7 @@ import {
 
 // ── Network config ──────────────────────────────────────────────────────────
 const TESTNET_URL = 'https://horizon-testnet.stellar.org';
+export const TESTNET_PASSPHRASE = Networks.TESTNET;
 
 // Lazy-initialize to avoid module-level crash if SDK isn't fully ready yet
 let _server: Horizon.Server | null = null;
@@ -327,6 +328,88 @@ export function getFeeBreakdown(amountInr: number, xlmRate = STATIC_XLM_TO_INR) 
 }
 
 export { getServer as getHorizonServer };
+
+// ── 10. Helpers for Freighter (build-only, no secret key needed) ─────────────
+
+// Sign a transaction locally with a secret key and return the signed XDR
+export function signTxLocally(secretKey: string, unsignedXdr: string): string {
+  const kp = Keypair.fromSecret(secretKey);
+  const tx = TransactionBuilder.fromXDR(unsignedXdr, Networks.TESTNET);
+  tx.sign(kp);
+  return tx.toXDR();
+}
+
+// Build an unsigned payment transaction and return its XDR
+export async function buildPaymentTxXdr(
+  senderPublic: string,
+  receiverPublic: string,
+  amountXLM: string,
+  memo?: string
+): Promise<string> {
+  const account = await getServer().loadAccount(senderPublic);
+  const builder = new TransactionBuilder(account, {
+    fee: STELLAR_FEE_STROOPS,
+    networkPassphrase: Networks.TESTNET,
+  }).addOperation(
+    Operation.payment({ destination: receiverPublic, asset: Asset.native(), amount: amountXLM })
+  );
+  if (memo) builder.addMemo(Memo.text(memo.substring(0, 28)));
+  return builder.setTimeout(30).build().toXDR();
+}
+
+// Build an unsigned claimable balance (escrow) tx and return its XDR
+export async function buildEscrowTxXdr(
+  senderPublic: string,
+  receiverPublic: string,
+  amountXLM: string,
+  expiryDate: Date
+): Promise<string> {
+  const account = await getServer().loadAccount(senderPublic);
+  const expiryTs = String(Math.floor(expiryDate.getTime() / 1000));
+  const tx = new TransactionBuilder(account, {
+    fee: STELLAR_FEE_STROOPS,
+    networkPassphrase: Networks.TESTNET,
+  }).addOperation(
+    Operation.createClaimableBalance({
+      asset: Asset.native(),
+      amount: amountXLM,
+      claimants: [
+        new Claimant(receiverPublic, Claimant.predicateBeforeAbsoluteTime(expiryTs)),
+        new Claimant(senderPublic, Claimant.predicateNot(Claimant.predicateBeforeAbsoluteTime(expiryTs))),
+      ],
+    })
+  ).setTimeout(30).build();
+  return tx.toXDR();
+}
+
+// Build an unsigned claim-claimable-balance tx and return its XDR
+export async function buildClaimBalanceTxXdr(
+  claimerPublic: string,
+  balanceId: string
+): Promise<string> {
+  const account = await getServer().loadAccount(claimerPublic);
+  const tx = new TransactionBuilder(account, {
+    fee: STELLAR_FEE_STROOPS,
+    networkPassphrase: Networks.TESTNET,
+  }).addOperation(
+    Operation.claimClaimableBalance({ balanceId })
+  ).setTimeout(30).build();
+  return tx.toXDR();
+}
+
+// Submit a pre-signed transaction XDR and return a TransactionResult
+export async function submitSignedTxXdr(signedXdr: string): Promise<TransactionResult> {
+  const startTime = Date.now();
+  const tx = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
+  const result = await getServer().submitTransaction(tx);
+  return {
+    hash: result.hash,
+    fee: '0.00001',
+    timeSeconds: Math.round((Date.now() - startTime) / 1000),
+    ledger: result.ledger,
+    explorerUrl: `https://stellar.expert/explorer/testnet/tx/${result.hash}`,
+  };
+}
 
 // ── 8. Escrow via Stellar Claimable Balances ─────────────────────────────────
 

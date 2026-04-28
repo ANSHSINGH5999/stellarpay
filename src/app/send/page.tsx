@@ -13,7 +13,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@/lib/WalletContext';
-import { sendPayment, getFeeBreakdown } from '@/lib/stellar';
+import { buildPaymentTxXdr, submitSignedTxXdr, getFeeBreakdown } from '@/lib/stellar';
 import { useStellarPrice } from '@/hooks/useStellarPrice';
 import {
   Send, ArrowRight, CheckCircle2, ExternalLink,
@@ -33,7 +33,7 @@ interface TxResult {
 
 export default function SendPage() {
   const router     = useRouter();
-  const { publicKey, secretKey, balance, refreshBalance, isInitializing } = useWallet();
+  const { publicKey, balance, refreshBalance, isInitializing, signTx } = useWallet();
   const { rate: xlmRate } = useStellarPrice();
 
   // Form state
@@ -63,7 +63,7 @@ export default function SendPage() {
       <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
     </div>
   );
-  if (!publicKey || !secretKey) return null;
+  if (!publicKey) return null;
 
   // ── Validation ─────────────────────────────────────────────────────────────
   const isValidAddress = (addr: string) => addr.startsWith('G') && addr.length === 56;
@@ -92,12 +92,14 @@ export default function SendPage() {
     setStep('sending');
 
     try {
-      const result = await sendPayment(
-        secretKey,
+      const unsignedXdr = await buildPaymentTxXdr(
+        publicKey,
         receiver.trim(),
-        feeBreakdown.xlmAmount,   // send the XLM equivalent
+        feeBreakdown.xlmAmount,
         memo || undefined
       );
+      const signedXdr = await signTx(unsignedXdr);
+      const result = await submitSignedTxXdr(signedXdr);
 
       setTxResult(result);
       setStep('success');

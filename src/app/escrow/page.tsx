@@ -4,7 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useWallet } from '@/lib/WalletContext';
-import { createEscrow, getMyEscrows, claimEscrow, type EscrowBalance } from '@/lib/stellar';
+import {
+  buildEscrowTxXdr, buildClaimBalanceTxXdr, submitSignedTxXdr,
+  getMyEscrows, type EscrowBalance,
+} from '@/lib/stellar';
 import {
   ArrowLeft, Clock, CheckCircle2, AlertTriangle,
   Lock, Unlock, RefreshCw, ExternalLink, Plus, Info,
@@ -14,7 +17,7 @@ import clsx from 'clsx';
 
 export default function EscrowPage() {
   const router = useRouter();
-  const { publicKey, secretKey, isInitializing } = useWallet();
+  const { publicKey, isInitializing, signTx } = useWallet();
 
   const [showCreate, setShowCreate]     = useState(false);
   const [receiver, setReceiver]         = useState('');
@@ -50,25 +53,26 @@ export default function EscrowPage() {
       <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
     </div>
   );
-  if (!publicKey || !secretKey) return null;
+  if (!publicKey) return null;
 
   const isValidAddress = (a: string) => a.startsWith('G') && a.length === 56;
   const canCreate = isValidAddress(receiver) && receiver !== publicKey && parseFloat(amount) > 0 && parseInt(hours) > 0;
 
   const handleCreate = async () => {
-    if (!canCreate) return;
+    if (!canCreate || !publicKey) return;
     setIsCreating(true);
     setCreateError('');
     const expiryDate = new Date(Date.now() + parseInt(hours) * 3_600_000);
     try {
-      const result = await createEscrow(secretKey, receiver, amount, expiryDate);
+      const unsignedXdr = await buildEscrowTxXdr(publicKey, receiver, amount, expiryDate);
+      const signedXdr   = await signTx(unsignedXdr);
+      const result      = await submitSignedTxXdr(signedXdr);
       toast.success('Escrow locked on Stellar!');
       setShowCreate(false);
       setReceiver('');
       setAmount('');
       setHours('24');
       await loadEscrows();
-      // Open explorer in background
       window.open(result.explorerUrl, '_blank', 'noopener,noreferrer');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to create escrow';
@@ -80,10 +84,13 @@ export default function EscrowPage() {
   };
 
   const handleClaim = async (escrow: EscrowBalance) => {
+    if (!publicKey) return;
     setClaimingId(escrow.id);
     const toastId = toast.loading(escrow.role === 'receiver' ? 'Claiming funds…' : 'Refunding…');
     try {
-      const result = await claimEscrow(secretKey, escrow.id);
+      const unsignedXdr = await buildClaimBalanceTxXdr(publicKey, escrow.id);
+      const signedXdr   = await signTx(unsignedXdr);
+      const result      = await submitSignedTxXdr(signedXdr);
       toast.success(`Done! Tx: ${result.hash.slice(0, 10)}…`, { id: toastId });
       await loadEscrows();
     } catch (err) {

@@ -3,16 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@/lib/WalletContext';
-import { Zap, Plus, Key, AlertTriangle, Eye, EyeOff, Sparkles, ShieldCheck, Coins } from 'lucide-react';
+import { Zap, Plus, Key, AlertTriangle, Eye, EyeOff, Sparkles, ShieldCheck, Coins, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function HomePage() {
   const router = useRouter();
-  const { publicKey, createWallet, importWallet, isLoading, isInitializing, error } = useWallet();
+  const { publicKey, createWallet, importWallet, connectFreighter, isLoading, isInitializing, error } = useWallet();
   const [showImport, setShowImport] = useState(false);
   const [secretInput, setSecretInput] = useState('');
   const [showSecret, setShowSecret] = useState(false);
+  const [freighterLoading, setFreighterLoading] = useState(false);
 
   // -- Auto-redirect when wallet connects (covers both auto-reconnect and manual connect) --
   useEffect(() => {
@@ -45,6 +46,20 @@ export default function HomePage() {
     }
   };
 
+  // -- Freighter connect handler --
+  const handleFreighter = async () => {
+    setFreighterLoading(true);
+    try {
+      await connectFreighter();
+      toast.success('Freighter connected!');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to connect Freighter';
+      toast.error(msg);
+    } finally {
+      setFreighterLoading(false);
+    }
+  };
+
   // -- Import wallet handler --
   const handleImport = async () => {
     if (!secretInput.trim()) {
@@ -64,7 +79,7 @@ export default function HomePage() {
   const heroStats = [
     { label: 'Transfer time', value: '< 5 sec', accent: 'text-amber-300', panel: 'border-amber-400/20 bg-amber-400/8' },
     { label: 'Network fee', value: '₹0.003', accent: 'text-rose-200', panel: 'border-rose-400/20 bg-rose-400/8' },
-    { label: 'Beta users', value: '30+', accent: 'text-emerald-200', panel: 'border-emerald-400/20 bg-emerald-400/8' },
+    { label: 'Beta users', value: '6+', accent: 'text-emerald-200', panel: 'border-emerald-400/20 bg-emerald-400/8' },
   ];
 
   const featurePills = [
@@ -141,25 +156,49 @@ export default function HomePage() {
 
           {!showImport ? (
             <div className="flex flex-col gap-3">
+              {/* Freighter — primary CTA for real wallets */}
+              <button
+                onClick={handleFreighter}
+                disabled={freighterLoading || isLoading}
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold
+                           border border-brand-500/60 bg-brand-500/15 text-brand-200
+                           hover:bg-brand-500/25 hover:border-brand-400/80 transition-colors
+                           disabled:opacity-50"
+              >
+                {freighterLoading ? (
+                  <span className="w-4 h-4 border-2 border-brand-400/30 border-t-brand-400 rounded-full animate-spin" />
+                ) : (
+                  <Wallet className="w-4 h-4" />
+                )}
+                {freighterLoading ? 'Connecting…' : 'Connect Freighter Wallet'}
+              </button>
+
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <div className="flex-1 h-px bg-surface-muted" />
+                <span>or use a testnet wallet</span>
+                <div className="flex-1 h-px bg-surface-muted" />
+              </div>
+
               <button
                 onClick={handleCreate}
-                disabled={isLoading}
-                className="btn-primary flex items-center justify-center gap-2 w-full"
+                disabled={isLoading || freighterLoading}
+                className="btn-secondary flex items-center justify-center gap-2 w-full bg-black/75 hover:bg-zinc-900 border border-white/15"
               >
                 {isLoading ? (
-                  <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 ) : (
                   <Plus className="w-4 h-4" />
                 )}
-                {isLoading ? 'Creating wallet…' : 'Create New Wallet'}
+                {isLoading ? 'Creating…' : 'Create Testnet Wallet'}
               </button>
 
               <button
                 onClick={() => setShowImport(true)}
+                disabled={isLoading || freighterLoading}
                 className="btn-secondary flex items-center justify-center gap-2 w-full bg-black/75 hover:bg-zinc-900 border border-white/15"
               >
                 <Key className="w-4 h-4" />
-                Import Existing Wallet
+                Import Secret Key
               </button>
             </div>
           ) : (
