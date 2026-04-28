@@ -97,7 +97,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // ── Load from localStorage on mount — auto-create if no wallet found ────────
+  // ── Load from localStorage on mount ──────────────────────────────────────────
   useEffect(() => {
     const stored = localStorage.getItem('stellarpay_wallet');
     if (stored) {
@@ -117,27 +117,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setState(s => ({ ...s, isInitializing: false }));
       }
     } else {
-      // No wallet found — auto-create one silently so the user lands on the
-      // dashboard without any manual steps. isInitializing stays true so the
-      // spinner keeps showing until the wallet is ready.
-      (async () => {
-        setState(s => ({ ...s, isLoading: true }));
-        try {
-          const { publicKey, secretKey } = generateKeypair();
-          await fundTestnetAccount(publicKey);
-          const createdAt = new Date().toISOString();
-          localStorage.setItem(
-            'stellarpay_wallet',
-            JSON.stringify({ publicKey, secretKey, createdAt })
-          );
-          setState(s => ({ ...s, publicKey, secretKey, createdAt, isInitializing: false }));
-          loadAccountData(publicKey, secretKey);
-        } catch {
-          // Auto-create failed (e.g. Friendbot unavailable) — fall back to
-          // the manual wallet form so the user can try again.
-          setState(s => ({ ...s, isLoading: false, isInitializing: false }));
-        }
-      })();
+      // No stored wallet — show the landing page so the user explicitly
+      // creates or imports their own wallet.
+      setState(s => ({ ...s, isInitializing: false }));
     }
   }, [loadAccountData]);
 
