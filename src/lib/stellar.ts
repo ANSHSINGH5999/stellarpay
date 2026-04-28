@@ -164,21 +164,18 @@ export async function sendPayment(
     networkPassphrase: Networks.TESTNET,
   });
 
-  // Add payment operation
   txBuilder.addOperation(
     Operation.payment({
       destination: receiverPublic,
-      asset:       Asset.native(),             // XLM
-      amount:      amountXLM,
+      asset:       Asset.native(),
+      amount:      toStellarAmount(amountXLM),
     })
   );
 
-  // Optional: attach a text memo (like a payment note)
   if (memo) {
-    txBuilder.addMemo(Memo.text(memo.substring(0, 28))); // max 28 bytes
+    txBuilder.addMemo(Memo.text(memo.substring(0, 28)));
   }
 
-  // Transactions expire after 30 seconds (safety net)
   txBuilder.setTimeout(30);
 
   const tx = txBuilder.build();
@@ -219,7 +216,7 @@ export async function buildSponsoredPayment(
     Operation.payment({
       destination: receiverPublic,
       asset: Asset.native(),
-      amount: amountXLM,
+      amount: toStellarAmount(amountXLM),
     })
   );
 
@@ -322,7 +319,7 @@ export function getFeeBreakdown(amountInr: number, xlmRate = STATIC_XLM_TO_INR) 
     platformFee:   feeInr.toFixed(2),
     networkFee:    networkFee.toFixed(3),
     receiverGets:  receiveAmt.toFixed(2),
-    xlmAmount:     xlmAmount.toFixed(4),
+    xlmAmount:     xlmAmount.toFixed(7),
     rate:          xlmRate,
   };
 }
@@ -339,7 +336,28 @@ export function signTxLocally(secretKey: string, unsignedXdr: string): string {
   return tx.toXDR();
 }
 
-// Build an unsigned payment transaction and return its XDR
+// Normalize an XLM amount string to 7 decimal places as required by Stellar
+function toStellarAmount(amount: string): string {
+  const n = parseFloat(amount);
+  if (isNaN(n) || n <= 0) throw new Error('Invalid amount');
+  return n.toFixed(7);
+}
+
+// Extract human-readable error from a Horizon 400 response
+function extractHorizonError(err: unknown): string {
+  if (err && typeof err === 'object' && 'response' in err) {
+    const res = (err as { response?: { data?: { extras?: { result_codes?: Record<string, unknown> } } } }).response;
+    const codes = res?.data?.extras?.result_codes;
+    if (codes) {
+      const ops = Array.isArray(codes.operations) ? (codes.operations as string[]).join(', ') : '';
+      return `Transaction failed: ${codes.transaction ?? ''}${ops ? ` — ${ops}` : ''}`;
+    }
+  }
+  return err instanceof Error ? err.message : 'Transaction failed';
+}
+
+// Build an unsigned payment transaction and return its XDR.
+// Uses a 300-second timeout so Freighter users have time to confirm.
 export async function buildPaymentTxXdr(
   senderPublic: string,
   receiverPublic: string,
@@ -351,13 +369,17 @@ export async function buildPaymentTxXdr(
     fee: STELLAR_FEE_STROOPS,
     networkPassphrase: Networks.TESTNET,
   }).addOperation(
-    Operation.payment({ destination: receiverPublic, asset: Asset.native(), amount: amountXLM })
+    Operation.payment({
+      destination: receiverPublic,
+      asset: Asset.native(),
+      amount: toStellarAmount(amountXLM),
+    })
   );
   if (memo) builder.addMemo(Memo.text(memo.substring(0, 28)));
-  return builder.setTimeout(30).build().toXDR();
+  return builder.setTimeout(300).build().toXDR();
 }
 
-// Build an unsigned claimable balance (escrow) tx and return its XDR
+// Build an unsigned claimable balance (escrow) tx and return its XDR.
 export async function buildEscrowTxXdr(
   senderPublic: string,
   receiverPublic: string,
@@ -372,17 +394,17 @@ export async function buildEscrowTxXdr(
   }).addOperation(
     Operation.createClaimableBalance({
       asset: Asset.native(),
-      amount: amountXLM,
+      amount: toStellarAmount(amountXLM),
       claimants: [
         new Claimant(receiverPublic, Claimant.predicateBeforeAbsoluteTime(expiryTs)),
         new Claimant(senderPublic, Claimant.predicateNot(Claimant.predicateBeforeAbsoluteTime(expiryTs))),
       ],
     })
-  ).setTimeout(30).build();
+  ).setTimeout(300).build();
   return tx.toXDR();
 }
 
-// Build an unsigned claim-claimable-balance tx and return its XDR
+// Build an unsigned claim-claimable-balance tx and return its XDR.
 export async function buildClaimBalanceTxXdr(
   claimerPublic: string,
   balanceId: string
@@ -393,22 +415,27 @@ export async function buildClaimBalanceTxXdr(
     networkPassphrase: Networks.TESTNET,
   }).addOperation(
     Operation.claimClaimableBalance({ balanceId })
-  ).setTimeout(30).build();
+  ).setTimeout(300).build();
   return tx.toXDR();
 }
 
-// Submit a pre-signed transaction XDR and return a TransactionResult
+// Submit a pre-signed transaction XDR and return a TransactionResult.
+// Throws a human-readable error that includes the Horizon result codes on failure.
 export async function submitSignedTxXdr(signedXdr: string): Promise<TransactionResult> {
   const startTime = Date.now();
   const tx = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
-  const result = await getServer().submitTransaction(tx);
-  return {
-    hash: result.hash,
-    fee: '0.00001',
-    timeSeconds: Math.round((Date.now() - startTime) / 1000),
-    ledger: result.ledger,
-    explorerUrl: `https://stellar.expert/explorer/testnet/tx/${result.hash}`,
-  };
+  try {
+    const result = await getServer().submitTransaction(tx);
+    return {
+      hash: result.hash,
+      fee: '0.00001',
+      timeSeconds: Math.round((Date.now() - startTime) / 1000),
+      ledger: result.ledger,
+      explorerUrl: `https://stellar.expert/explorer/testnet/tx/${result.hash}`,
+    };
+  } catch (err) {
+    throw new Error(extractHorizonError(err));
+  }
 }
 
 // ── 8. Escrow via Stellar Claimable Balances ─────────────────────────────────
@@ -465,7 +492,7 @@ export async function createEscrow(
     .addOperation(
       Operation.createClaimableBalance({
         asset: Asset.native(),
-        amount: amountXLM,
+        amount: toStellarAmount(amountXLM),
         claimants: [
           new Claimant(
             receiverPublic,
