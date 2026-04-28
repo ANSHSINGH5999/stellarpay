@@ -13,7 +13,7 @@ All Level 6 requirements are met. Review the checklist below before submitting.
 | Metrics & monitoring dashboard | https://stellarpay-bxs8.vercel.app/ops |
 | Health check endpoint | https://stellarpay-bxs8.vercel.app/api/health |
 | Security checklist | https://github.com/ANSHSINGH5999/stellarpay/blob/main/docs/security-checklist.md |
-| Community contribution (Twitter/X) | https://x.com/ANSHSINGH5999/status/1908000000000000000 |
+| Community contribution (Twitter/X) | https://x.com/anshansh5999/status/2049018028143353920 |
 | User feedback Excel | `docs/user-feedback-responses.xlsx` (in repo) |
 | Google Form | https://docs.google.com/forms/d/e/1FAIpQLSfoh_XA5OEFAvh0oz-ryo6Wa-E0PPBOjqT2aTGhf4GehfbY0g/viewform |
 
@@ -38,6 +38,6 @@ All Level 6 requirements are met. Review the checklist below before submitting.
 ## Items to complete before submitting
 
 - [x] Replace placeholder Google Form link — updated in docs/user-feedback.md and docs/submission.md
-- [ ] Post on Twitter/X and replace placeholder tweet ID (`1908000000000000000`) in README and docs/community-contribution.md
+- [x] Twitter/X post published — link updated in docs/community-contribution.md and docs/submission.md
 - [ ] Deploy Soroban contracts to testnet and set `NEXT_PUBLIC_PAYMENT_CONTRACT_ID` + `NEXT_PUBLIC_ESCROW_CONTRACT_ID` in Vercel env vars
 - [ ] Verify the live app at https://stellarpay-bxs8.vercel.app before Demo Day

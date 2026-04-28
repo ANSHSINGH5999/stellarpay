@@ -4,8 +4,7 @@
 
 StellarPay was shared on X/Twitter as part of the Black Belt submission.
 
-**Post URL:** https://x.com/ANSHSINGH5999/status/1908000000000000000
-> **ACTION REQUIRED:** Replace `1908000000000000000` with your real tweet ID after posting.
+**Post URL:** https://x.com/anshansh5999/status/2049018028143353920
 
 **Posted on:** April 2026
 
@@ -31,7 +30,7 @@ StellarPay was shared on X/Twitter as part of the Black Belt submission.
 - [x] Live demo link included
 - [x] Stellar / Soroban hashtags included
 - [x] Post URL recorded in this file
-- [ ] Replace placeholder tweet ID with real tweet ID
+- [x] Replace placeholder tweet ID with real tweet ID
 
 ## Why this counts
 
